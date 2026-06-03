@@ -16,7 +16,7 @@ interface HoursEntry {
     avatar?: string
     hours: number
     description?: string
-    hourlyRate?: number
+    monthlySalary?: number
     logged?: boolean
 }
 
@@ -107,9 +107,9 @@ export function TaskHoursModal({
                                         </Avatar>
                                         <div>
                                             <div className="font-medium text-sm">{assignee.userName}</div>
-                                            {assignee.hourlyRate && (
+                                            {assignee.monthlySalary && (
                                                 <div className="text-xs text-muted-foreground">
-                                                    {Number(assignee.hourlyRate).toLocaleString()} FCFA/h
+                                                    {Number(assignee.monthlySalary).toLocaleString()} FCFA/mois
                                                 </div>
                                             )}
                                         </div>
@@ -146,7 +146,7 @@ export function TaskHoursModal({
                                     <div className="space-y-1.5">
                                         <Label className="text-xs">Montant estimé</Label>
                                         <div className="h-9 flex items-center text-sm font-medium text-primary">
-                                            {((hours[assignee.userId]?.hours || 0) * Number(assignee.hourlyRate || 0)).toLocaleString()} FCFA
+                                            {Number(assignee.monthlySalary || 0).toLocaleString()} FCFA
                                         </div>
                                     </div>
                                 </div>
@@ -186,7 +186,7 @@ export function TaskHoursModal({
                                 <span className="text-muted-foreground">Montant Total</span>
                                 <span className="text-lg font-bold text-primary">
                                     {displayAssignees.reduce((sum, a) =>
-                                        sum + ((hours[a.userId]?.hours || 0) * Number(a.hourlyRate || 0)), 0
+                                        sum + Number(a.monthlySalary || 0), 0
                                     ).toLocaleString()} FCFA
                                 </span>
                             </div>

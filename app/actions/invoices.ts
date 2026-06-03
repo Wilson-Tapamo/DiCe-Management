@@ -365,7 +365,7 @@ export async function addTaskToInvoice(taskId: string) {
                 project: true,
                 workedHours: {
                     include: {
-                        user: { select: { id: true, name: true, hourlyRate: true } }
+                        user: { select: { id: true, name: true, monthlySalary: true } }
                     }
                 }
             }
@@ -401,8 +401,8 @@ export async function addTaskToInvoice(taskId: string) {
                     type: 'HOURS',
                     description: `Heures - ${wh.user.name || 'Consultant'} - ${task.title}`,
                     quantity: Number(wh.hours),
-                    unitPrice: Number(wh.user.hourlyRate || 0),
-                    amount: Number(wh.hours) * Number(wh.user.hourlyRate || 0)
+                    unitPrice: Number(wh.user.monthlySalary || 0),
+                    amount: Number(wh.hours) * Number(wh.user.monthlySalary || 0)
                 }
             })
 
@@ -410,7 +410,7 @@ export async function addTaskToInvoice(taskId: string) {
             await prisma.financeEntry.create({
                 data: {
                     type: 'EXPENSE',
-                    amount: Number(wh.hours) * Number(wh.user.hourlyRate || 0),
+                    amount: Number(wh.hours) * Number(wh.user.monthlySalary || 0),
                     description: `Paiement ${wh.user.name} - ${task.title}`,
                     category: 'Honoraires Consultants',
                     projectId: task.projectId,
