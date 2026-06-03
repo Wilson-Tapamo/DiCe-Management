@@ -30,7 +30,7 @@ export function ConsultantForm({ open, onOpenChange, consultant }: ConsultantFor
         phone: consultant?.phone || "",
         title: consultant?.title || "",
         description: consultant?.description || "",
-        hourlyRate: Number(consultant?.hourlyRate) || 0,
+        monthlySalary: Number(consultant?.monthlySalary) || 0,
         level: consultant?.level || "JUNIOR",
         rating: Number(consultant?.rating) || 0,
         skills: Array.isArray(consultant?.skills) ? consultant.skills : [],
@@ -52,7 +52,7 @@ export function ConsultantForm({ open, onOpenChange, consultant }: ConsultantFor
                 phone: consultant?.phone || "",
                 title: consultant?.title || "",
                 description: consultant?.description || "",
-                hourlyRate: Number(consultant?.hourlyRate) || 0,
+                monthlySalary: Number(consultant?.monthlySalary) || 0,
                 level: consultant?.level || "JUNIOR",
                 rating: Number(consultant?.rating) || 0,
                 skills: Array.isArray(consultant?.skills) ? consultant.skills : [],
@@ -66,7 +66,7 @@ export function ConsultantForm({ open, onOpenChange, consultant }: ConsultantFor
                 phone: "",
                 title: "",
                 description: "",
-                hourlyRate: 0,
+                monthlySalary: 0,
                 level: "JUNIOR",
                 rating: 0,
                 skills: [],
@@ -202,9 +202,9 @@ export function ConsultantForm({ open, onOpenChange, consultant }: ConsultantFor
                                             <FormMessage />
                                         </FormItem>
                                     )} />
-                                    <FormField control={form.control} name="hourlyRate" render={({ field }) => (
+                                    <FormField control={form.control} name="monthlySalary" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Taux Horaire (FCFA)</FormLabel>
+                                            <FormLabel>Salaire Mensuel (FCFA)</FormLabel>
                                             <FormControl><Input type="number" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>

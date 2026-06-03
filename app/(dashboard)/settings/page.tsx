@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 "use client";
 
 import {
@@ -253,9 +254,9 @@ export default function SettingsPage() {
                                     <Label>Language</Label>
                                     <select className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                                         <option>English</option>
-                                        <option>Français</option>
+                                        <option>FranÃ§ais</option>
                                         <option>Deutsch</option>
-                                        <option>Español</option>
+                                        <option>EspaÃ±ol</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -277,3 +278,4 @@ export default function SettingsPage() {
         </div>
     );
 }
+

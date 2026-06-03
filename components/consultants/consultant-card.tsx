@@ -110,10 +110,10 @@ export function ConsultantCard({ consultant, onEdit, onView, onDelete }: Consult
                         <p className="text-lg font-bold text-foreground">{taskCount}</p>
                         <p className="text-xs text-muted-foreground">Tâches</p>
                     </div>
-                    {Number(consultant.hourlyRate) > 0 && (
+                    {Number(consultant.monthlySalary) > 0 && (
                         <div className="flex-1 text-center border-l">
-                            <p className="text-lg font-bold text-foreground">{Number(consultant.hourlyRate).toLocaleString()} FCFA</p>
-                            <p className="text-xs text-muted-foreground">/ heure</p>
+                            <p className="text-lg font-bold text-foreground">{Number(consultant.monthlySalary).toLocaleString()} FCFA</p>
+                            <p className="text-xs text-muted-foreground">/ mois</p>
                         </div>
                     )}
                 </div>

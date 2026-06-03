@@ -30,7 +30,7 @@ export const ConsultantSchema = z.object({
 
     title: z.string().optional(),
     description: z.string().optional(),
-    hourlyRate: z.coerce.number().min(0).default(0),
+    monthlySalary: z.coerce.number().min(0).default(0),
     level: z.enum(["JUNIOR", "INTERMEDIATE", "SENIOR", "DIRECTOR"]).default("JUNIOR"),
     rating: z.coerce.number().min(0).max(5).default(0),
 

@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth"
 import { getTasks } from "@/app/actions/tasks"
 import { getProjects, getConsultants } from "@/app/actions/projects"
@@ -47,3 +48,4 @@ export default async function TasksPage({
         </div>
     )
 }
+

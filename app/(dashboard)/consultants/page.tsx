@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getConsultants } from "@/app/actions/users";
@@ -29,3 +30,4 @@ export default async function ConsultantsPage() {
         <ConsultantsView consultants={serializedConsultants} />
     );
 }
+

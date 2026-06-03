@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth";
 import { getProjects, getConsultants } from "@/app/actions/projects";
 import { ProjectsView } from "@/components/projects/projects-view";
@@ -43,3 +44,4 @@ export default async function ProjectsPage({
         />
     );
 }
+

@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { createTask, updateTask } from "@/app/actions/tasks"
+import { createTask, updateTask, addTaskAttachment, deleteTaskAttachment } from "@/app/actions/tasks"
 import { TaskSchema, TaskInput } from "@/lib/schemas"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Loader2, Plus, Trash2, X } from "lucide-react"
+import { Calendar as CalendarIcon, Loader2, Plus, Trash2, X, Paperclip, Upload, File, ImageIcon, FileText, Trash } from "lucide-react"
 import { fr } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
@@ -59,6 +59,12 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
     const [selectedConsultants, setSelectedConsultants] = useState<string[]>(
         task?.assignees?.map((a: any) => a.id) || []
     )
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadedFiles, setUploadedFiles] = useState<{ url: string, name: string, size: number, type?: string }[]>(
+        task?.attachments?.map((a: any) => ({ url: a.fileUrl, name: a.fileName, size: a.fileSize })) || []
+    )
+    const [isUploading, setIsUploading] = useState(false)
+    const [dragOver, setDragOver] = useState(false)
 
     // Load existing subtasks or empty
     // We store id if it exists, so we know it's not new
@@ -92,31 +98,39 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
             try {
                 const formattedData = {
                     ...data,
-                    // For creation, we send initialSubtasks
                     initialSubtasks: !task ? subtasks.filter(s => s.value.trim().length > 0).map(s => s.value) : undefined
                 }
 
                 let result;
+                let taskId: string | undefined;
                 if (task) {
                     result = await updateTask(task.id, formattedData)
+                    taskId = task.id
 
-                    // Handle new subtasks for Edit mode
                     const newSubtasks = subtasks.filter(s => !s.id && s.value.trim().length > 0)
                     if (newSubtasks.length > 0) {
-                        // Import addSubtask dynamically or assume it's imported
                         const { addSubtask } = await import("@/app/actions/tasks")
                         await Promise.all(newSubtasks.map(s => addSubtask(task.id, s.value)))
                     }
                 } else {
                     result = await createTask(formattedData)
+                    taskId = (result as any).taskId
                 }
 
                 if (result.success) {
+                    if (taskId && !task && uploadedFiles.length > 0) {
+                        await Promise.all(
+                            uploadedFiles.map(f =>
+                                addTaskAttachment(taskId, { fileName: f.name, fileUrl: f.url, fileSize: f.size })
+                            )
+                        )
+                    }
                     onOpenChange(false)
                     form.reset()
                     if (!task) {
                         setSelectedConsultants([])
                         setSubtasks([])
+                        setUploadedFiles([])
                     }
                 } else {
                     console.error(result.error)
@@ -125,6 +139,60 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
                 console.error(error)
             }
         })
+    }
+
+    const handleFileUpload = async (files: FileList | File[]) => {
+        const fileArray = Array.from(files)
+        setIsUploading(true)
+        for (const file of fileArray) {
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
+                const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                const data = await res.json()
+                if (data.success) {
+                    setUploadedFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size, type: file.type }])
+                    // If editing, save attachment immediately
+                    if (task?.id) {
+                        await addTaskAttachment(task.id, { fileName: data.name, fileUrl: data.url, fileSize: data.size })
+                    }
+                }
+            } catch (err) {
+                console.error('Upload error:', err)
+            }
+        }
+        setIsUploading(false)
+    }
+
+    const handleDrop = async (e: React.DragEvent) => {
+        e.preventDefault()
+        setDragOver(false)
+        if (e.dataTransfer.files.length > 0) {
+            await handleFileUpload(e.dataTransfer.files)
+        }
+    }
+
+    const removeFile = async (index: number) => {
+        const file = uploadedFiles[index]
+        setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+        // If editing and file was saved, delete from DB
+        if (task?.id && task?.attachments) {
+            const attachment = task.attachments.find((a: any) => a.fileUrl === file.url)
+            if (attachment) await deleteTaskAttachment(attachment.id)
+        }
+    }
+
+    const getFileIcon = (type?: string) => {
+        if (!type) return <File className="h-4 w-4" />
+        if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-blue-500" />
+        if (type.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />
+        return <File className="h-4 w-4 text-slate-500" />
+    }
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' o'
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' Ko'
+        return (bytes / 1048576).toFixed(1) + ' Mo'
     }
 
     const toggleConsultant = (id: string) => {
@@ -138,7 +206,7 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full h-full sm:h-auto sm:max-w-3xl overflow-y-auto max-h-[90vh]">
+            <DialogContent className="w-full sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>{task ? "Modifier la Tâche" : "Nouvelle Tâche"}</DialogTitle>
                 </DialogHeader>
@@ -160,7 +228,7 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
                                     name="title"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Titre du livrable *</FormLabel>
+                                            <FormLabel>Titre de la tâche *</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Ex: Rédaction contrat..." {...field} />
                                             </FormControl>
@@ -433,13 +501,65 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
 
                             {/* FILES TAB */}
                             <TabsContent value="files" className="pt-4">
-                                <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg bg-muted/10">
-                                    <p className="text-muted-foreground text-sm mb-4">Glissez-déposez vos fichiers ici</p>
-                                    <Button variant="outline" onClick={(e) => e.preventDefault()}>
-                                        Parcourir
-                                    </Button>
-                                    <p className="text-xs text-muted-foreground mt-2">(Fonctionnalité à venir)</p>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+                                />
+                                <div
+                                    className={`flex flex-col items-center justify-center py-10 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                                        dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/20 bg-muted/10 hover:border-primary/50'
+                                    }`}
+                                    onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                                    onDragLeave={() => setDragOver(false)}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {isUploading ? (
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                                    ) : (
+                                        <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                                    )}
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        {isUploading ? 'Upload en cours...' : 'Glissez vos fichiers ici'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">ou cliquez pour parcourir — max 10 Mo</p>
                                 </div>
+
+                                {uploadedFiles.length > 0 && (
+                                    <div className="mt-4 space-y-2">
+                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fichiers attachés ({uploadedFiles.length})</p>
+                                        {uploadedFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors group">
+                                                {getFileIcon(file.type)}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">{file.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <a
+                                                        href={file.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-primary hover:underline px-1"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        Ouvrir
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => { e.stopPropagation(); removeFile(index) }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-destructive"
+                                                    >
+                                                        <Trash className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </TabsContent>
                         </Tabs>
 

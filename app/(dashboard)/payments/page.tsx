@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import {
     Card,
     CardContent,
@@ -26,7 +27,7 @@ export default function PaymentsPage() {
             reference: "Wire Transfer #TRF123",
             invoice: "INV-001",
             client: "ABC Corporation",
-            amount: "€15,000.00",
+            amount: "â‚¬15,000.00",
             status: "Completed",
             method: "Bank Transfer",
             date: "Dec 10, 2024",
@@ -37,7 +38,7 @@ export default function PaymentsPage() {
             reference: "Card Payment #CRD456",
             invoice: "INV-002",
             client: "XYZ Holdings",
-            amount: "€8,500.00",
+            amount: "â‚¬8,500.00",
             status: "Pending",
             method: "Credit Card",
             date: "Dec 18, 2024",
@@ -48,7 +49,7 @@ export default function PaymentsPage() {
             reference: "Supplier Payment",
             invoice: "EXP-001",
             client: "Office Supplies Co.",
-            amount: "€1,200.00",
+            amount: "â‚¬1,200.00",
             status: "Completed",
             method: "Bank Transfer",
             date: "Dec 05, 2024",
@@ -59,7 +60,7 @@ export default function PaymentsPage() {
             reference: "Wire Transfer #TRF789",
             invoice: "INV-004",
             client: "DEF Industries",
-            amount: "€5,500.00",
+            amount: "â‚¬5,500.00",
             status: "Failed",
             method: "Bank Transfer",
             date: "Dec 01, 2024",
@@ -70,7 +71,7 @@ export default function PaymentsPage() {
             reference: "Consultant Fee",
             invoice: "EXP-002",
             client: "John Doe",
-            amount: "€3,500.00",
+            amount: "â‚¬3,500.00",
             status: "Completed",
             method: "Bank Transfer",
             date: "Dec 01, 2024",
@@ -92,9 +93,9 @@ export default function PaymentsPage() {
     };
 
     const summary = {
-        totalReceived: "€23,500.00",
-        totalPaid: "€4,700.00",
-        pending: "€8,500.00",
+        totalReceived: "â‚¬23,500.00",
+        totalPaid: "â‚¬4,700.00",
+        pending: "â‚¬8,500.00",
     };
 
     return (
@@ -214,7 +215,7 @@ export default function PaymentsPage() {
                                             {payment.reference}
                                         </p>
                                         <p className="text-sm text-slate-500">
-                                            {payment.client} • {payment.invoice}
+                                            {payment.client} â€¢ {payment.invoice}
                                         </p>
                                     </div>
                                     <div className="text-right">
@@ -246,3 +247,4 @@ export default function PaymentsPage() {
         </div>
     );
 }
+

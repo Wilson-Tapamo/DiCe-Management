@@ -9,9 +9,9 @@ import { hash } from "bcryptjs"
 export async function getConsultants(filters?: {
     search?: string
     level?: string
-    minRate?: number
-    maxRate?: number
-    sortBy?: 'rate_asc' | 'rate_desc' | 'rating_desc' | 'projects_desc'
+    minSalary?: number
+    maxSalary?: number
+    sortBy?: 'salary_asc' | 'salary_desc' | 'rating_desc' | 'projects_desc'
 }) {
     const session = await auth()
     if (!session?.user || (session.user as any)?.role !== "DIRECTOR") return { success: false, error: "Non autorisé" }
@@ -32,15 +32,15 @@ export async function getConsultants(filters?: {
         where.level = filters.level
     }
 
-    if (filters?.minRate !== undefined || filters?.maxRate !== undefined) {
-        where.hourlyRate = {}
-        if (filters.minRate !== undefined) where.hourlyRate.gte = filters.minRate
-        if (filters.maxRate !== undefined) where.hourlyRate.lte = filters.maxRate
+    if (filters?.minSalary !== undefined || filters?.maxSalary !== undefined) {
+        where.monthlySalary = {}
+        if (filters.minSalary !== undefined) where.monthlySalary.gte = filters.minSalary
+        if (filters.maxSalary !== undefined) where.monthlySalary.lte = filters.maxSalary
     }
 
     let orderBy: any = { name: 'asc' }
-    if (filters?.sortBy === 'rate_asc') orderBy = { hourlyRate: 'asc' }
-    if (filters?.sortBy === 'rate_desc') orderBy = { hourlyRate: 'desc' }
+    if (filters?.sortBy === 'salary_asc') orderBy = { monthlySalary: 'asc' }
+    if (filters?.sortBy === 'salary_desc') orderBy = { monthlySalary: 'desc' }
     if (filters?.sortBy === 'rating_desc') orderBy = { rating: 'desc' }
     // For projects_desc, we might need relation count sorting or sort in memory
 

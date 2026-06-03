@@ -21,6 +21,8 @@ import { TaskCard } from "./task-card"
 import { TaskDetailsModal } from "./task-details-modal"
 import { NewTaskModal } from "./new-task-modal"
 import { TaskStatusModal } from "./task-status-modal"
+import { TaskCalendarView } from "./task-calendar-view"
+import { TaskGanttView } from "./task-gantt-view"
 
 interface TasksViewProps {
     initialTasks: any[]
@@ -307,13 +309,13 @@ export function TasksView({ initialTasks, projects, consultants, currentUser }: 
                     </CardContent>
                 </Card>
             )}
-            {/* Calendar View Placeholder */}
+            {/* Calendar View */}
             {viewMode === 'calendar' && (
-                <div className="text-center py-12 text-muted-foreground">Vue Calendrier à venir (Placeholder)</div>
+                <TaskCalendarView tasks={initialTasks} onViewTask={handleViewTask} />
             )}
-            {/* Gantt View Placeholder */}
+            {/* Gantt View */}
             {viewMode === 'gantt' && (
-                <div className="text-center py-12 text-muted-foreground">Vue Gantt à venir (Placeholder)</div>
+                <TaskGanttView tasks={initialTasks} onViewTask={handleViewTask} />
             )}
 
             <NewTaskModal

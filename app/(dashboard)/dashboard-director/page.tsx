@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import {
     Card,
     CardContent,
@@ -40,14 +41,14 @@ export default async function DirectorDashboard() {
     const { success, data } = await getDirectorDashboardData();
 
     if (!success || !data) {
-        return <div className="p-8">Erreur de chargement des données.</div>;
+        return <div className="p-8">Erreur de chargement des donnÃ©es.</div>;
     }
 
     const stats = [
         {
             title: "Revenus (Ce mois)",
             value: `${data.finance.income.toLocaleString('fr-FR')} FCFA`,
-            change: "vs Dépenses: " + data.finance.expenses.toLocaleString('fr-FR'),
+            change: "vs DÃ©penses: " + data.finance.expenses.toLocaleString('fr-FR'),
             trend: data.finance.income >= data.finance.expenses ? "up" : "down",
             icon: DollarSign,
             color: "from-emerald-500 to-teal-600",
@@ -61,9 +62,9 @@ export default async function DirectorDashboard() {
             color: "from-blue-500 to-indigo-600",
         },
         {
-            title: "Tâches Urgentes",
+            title: "TÃ¢ches Urgentes",
             value: data.counts.urgentTasks.toString(),
-            change: "Priorité Haute",
+            change: "PrioritÃ© Haute",
             trend: "down", // Warning style usually
             icon: AlertCircle,
             color: "from-amber-500 to-orange-600",
@@ -87,14 +88,14 @@ export default async function DirectorDashboard() {
                         Tableau de Bord
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base">
-                        Bienvenue, {session?.user?.name}. Voici un aperçu de vos activités de formation.
+                        Bienvenue, {session?.user?.name}. Voici un aperÃ§u de vos activitÃ©s de formation.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
                     <Link href="/projects" className="flex-1 md:flex-none">
                         <Button className="w-full">
                             <FolderKanban className="h-4 w-4 mr-2" />
-                            Gérer Projets
+                            GÃ©rer Projets
                         </Button>
                     </Link>
                     <Link href="/reports" className="flex-1 md:flex-none">
@@ -144,7 +145,7 @@ export default async function DirectorDashboard() {
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
                             <CardTitle className="text-lg">Performance du Personnel</CardTitle>
-                            <CardDescription>Top performeurs par tâches complétées</CardDescription>
+                            <CardDescription>Top performeurs par tÃ¢ches complÃ©tÃ©es</CardDescription>
                         </div>
                         <Link href="/consultants">
                             <Button variant="ghost" size="sm" className="w-full sm:w-auto mt-2 sm:mt-0">
@@ -164,17 +165,17 @@ export default async function DirectorDashboard() {
                                         </Avatar>
                                         <div className="min-w-0">
                                             <p className="font-medium text-sm truncate">{c.name}</p>
-                                            <p className="text-xs text-muted-foreground truncate">{c.completedTasks} tâches terminées</p>
+                                            <p className="text-xs text-muted-foreground truncate">{c.completedTasks} tÃ¢ches terminÃ©es</p>
                                         </div>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-1 text-amber-500 font-medium text-sm ml-2">
-                                        ★ {c.rating}/5
+                                        â˜… {c.rating}/5
                                     </div>
                                 </div>
                             ))}
                             {data.consultants.length === 0 && (
                                 <div className="text-center py-8 text-muted-foreground text-sm">
-                                    Aucun membre du personnel trouvé.
+                                    Aucun membre du personnel trouvÃ©.
                                 </div>
                             )}
                         </div>
@@ -185,8 +186,8 @@ export default async function DirectorDashboard() {
                 <Card className="col-span-1 overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle className="text-lg">Notifications Récentes</CardTitle>
-                            <CardDescription>Dernières activités du système</CardDescription>
+                            <CardTitle className="text-lg">Notifications RÃ©centes</CardTitle>
+                            <CardDescription>DerniÃ¨res activitÃ©s du systÃ¨me</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent className="overflow-x-auto">
@@ -208,7 +209,7 @@ export default async function DirectorDashboard() {
                             ))}
                             {data.notifications.length === 0 && (
                                 <div className="text-center py-8 text-muted-foreground text-sm">
-                                    Aucune notification récente.
+                                    Aucune notification rÃ©cente.
                                 </div>
                             )}
                         </div>
@@ -218,3 +219,4 @@ export default async function DirectorDashboard() {
         </div>
     );
 }
+

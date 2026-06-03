@@ -48,7 +48,7 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full h-screen sm:h-[90vh] max-w-7xl p-0 gap-0 overflow-hidden flex flex-col">
+            <DialogContent className="w-full max-w-7xl p-0 gap-0 overflow-hidden flex flex-col max-h-[calc(100vh-2rem)]">
                 {/* Header */}
                 <div className="border-b p-6 flex flex-col gap-4 bg-muted/10">
                     <div className="flex items-start justify-between">

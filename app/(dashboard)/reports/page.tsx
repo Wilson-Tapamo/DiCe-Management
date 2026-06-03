@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import ReportsView from "@/components/reports/reports-view"
@@ -20,3 +21,4 @@ export default async function ReportsPage() {
         </div>
     )
 }
+

@@ -44,6 +44,7 @@ export async function getTasks(filters?: {
                 assignees: { select: { id: true, name: true, avatar: true } },
                 subtasks: { orderBy: { id: 'asc' } },
                 creator: { select: { id: true, name: true } },
+                attachments: { orderBy: { createdAt: 'desc' } },
                 _count: { select: { comments: true } }
             },
             orderBy: { updatedAt: 'desc' }
@@ -68,7 +69,7 @@ export async function createTask(data: TaskInput) {
     const budget = (budgetDebours || 0) + (budgetPerdiem || 0) + (budgetTransport || 0)
 
     try {
-        await prisma.task.create({
+        const created = await prisma.task.create({
             data: {
                 ...taskData,
                 budget,
@@ -99,7 +100,7 @@ export async function createTask(data: TaskInput) {
 
         revalidatePath("/tasks")
         revalidatePath("/projects")
-        return { success: true }
+        return { success: true, taskId: created.id }
     } catch (error) {
         console.error("Create task error:", error)
         return { success: false, error: "Erreur lors de la création de la tâche" }
@@ -148,11 +149,7 @@ export async function updateTask(id: string, data: Partial<TaskInput>) {
     }
 }
 
-export async function updateTaskStatus(
-    id: string,
-    status: string,
-    hoursData?: { userId: string, hours: number, description?: string }[]
-) {
+export async function updateTaskStatus(id: string, status: string) {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Non autorisé" }
 
@@ -160,8 +157,7 @@ export async function updateTaskStatus(
         const task = await prisma.task.findUnique({
             where: { id },
             include: {
-                assignees: { select: { id: true } },
-                workedHours: true
+                assignees: { select: { id: true } }
             }
         })
 
@@ -174,71 +170,10 @@ export async function updateTaskStatus(
             return { success: false, error: "Seul le directeur peut terminer une tâche" }
         }
 
-        // If going to COMPLETED, check if all assignees have hours logged
-        if (status === 'COMPLETED') {
-            const assigneeIds = task.assignees.map((a: any) => a.id)
-            const loggedUserIds = task.workedHours.map((wh: any) => wh.userId)
-            const missingHours = assigneeIds.filter((id: any) => !loggedUserIds.includes(id))
-
-            // If hours data provided, log missing hours
-            if (hoursData && hoursData.length > 0) {
-                for (const hd of hoursData) {
-                    await prisma.taskHours.upsert({
-                        where: { taskId_userId: { taskId: id, userId: hd.userId } },
-                        create: {
-                            taskId: id,
-                            userId: hd.userId,
-                            hours: hd.hours,
-                            description: hd.description
-                        },
-                        update: {
-                            hours: hd.hours,
-                            description: hd.description
-                        }
-                    })
-                }
-            } else if (missingHours.length > 0) {
-                return {
-                    success: false,
-                    error: "HOURS_REQUIRED",
-                    missingUsers: missingHours
-                }
-            }
-        }
-
-        // If Consultant going to REVIEW, they should log their own hours
-        if (status === 'REVIEW' && userRole === 'CONSULTANT') {
-            const hasLogged = task.workedHours.some((wh: any) => wh.userId === (session.user as any).id)
-            if (!hasLogged && hoursData) {
-                const myHours = hoursData.find((h: any) => h.userId === (session.user as any).id)
-                if (myHours) {
-                    await prisma.taskHours.create({
-                        data: {
-                            taskId: id,
-                            userId: (session.user as any).id,
-                            hours: myHours.hours,
-                            description: myHours.description
-                        }
-                    })
-                }
-            } else if (!hasLogged) {
-                return {
-                    success: false,
-                    error: "HOURS_REQUIRED_SELF"
-                }
-            }
-        }
-
         await prisma.task.update({
             where: { id },
             data: { status: status as any }
         })
-
-        // Auto-invoice when task is completed
-        if (status === 'COMPLETED') {
-            const { addTaskToInvoice } = await import('./invoices')
-            await addTaskToInvoice(id)
-        }
 
         revalidatePath("/tasks")
         revalidatePath("/consultants")
@@ -386,5 +321,55 @@ export async function deleteTask(id: string) {
         return { success: true }
     } catch (error) {
         return { success: false, error: "Erreur lors de la suppression" }
+    }
+}
+
+// Attachments
+export async function addTaskAttachment(taskId: string, data: { fileName: string, fileUrl: string, fileSize: number }) {
+    const session = await auth()
+    if (!session?.user) return { success: false, error: "Non autorisé" }
+
+    try {
+        const attachment = await prisma.taskAttachment.create({
+            data: {
+                taskId,
+                fileName: data.fileName,
+                fileUrl: data.fileUrl,
+                fileSize: data.fileSize,
+                uploadedById: (session.user as any).id
+            }
+        })
+        revalidatePath("/tasks")
+        return { success: true, data: attachment }
+    } catch (error) {
+        console.error("Add attachment error:", error)
+        return { success: false, error: "Erreur lors de l'ajout du fichier" }
+    }
+}
+
+export async function deleteTaskAttachment(attachmentId: string) {
+    const session = await auth()
+    if (!session?.user) return { success: false, error: "Non autorisé" }
+
+    try {
+        await prisma.taskAttachment.delete({ where: { id: attachmentId } })
+        revalidatePath("/tasks")
+        return { success: true }
+    } catch (error) {
+        console.error("Delete attachment error:", error)
+        return { success: false, error: "Erreur lors de la suppression du fichier" }
+    }
+}
+
+export async function getTaskAttachments(taskId: string) {
+    try {
+        const attachments = await prisma.taskAttachment.findMany({
+            where: { taskId },
+            include: { uploadedBy: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' }
+        })
+        return { success: true, data: attachments }
+    } catch (error) {
+        return { success: false, error: "Erreur" }
     }
 }

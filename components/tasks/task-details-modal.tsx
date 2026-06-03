@@ -15,7 +15,12 @@ import {
     X,
     FileText,
     MoreVertical,
-    Edit
+    Edit,
+    Upload,
+    File,
+    ImageIcon,
+    Trash,
+    Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -45,6 +50,9 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
     const [isSending, setIsSending] = useState(false)
     const [comments, setComments] = useState<any[]>([])
     const [loadingComments, setLoadingComments] = useState(false)
+    const [commentFiles, setCommentFiles] = useState<{ url: string, name: string, size: number }[]>([])
+    const [isUploadingComment, setIsUploadingComment] = useState(false)
+    const commentFileRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (open && task?.id) {
@@ -59,13 +67,14 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
     }, [open, task?.id])
 
     const handleSendComment = async () => {
-        if (!newComment.trim()) return
+        if (!newComment.trim() && commentFiles.length === 0) return
         setIsSending(true)
         try {
-            const res = await addComment(task.id, newComment)
+            const attachments = commentFiles.length > 0 ? commentFiles : undefined
+            const res = await addComment(task.id, newComment, attachments)
             if (res.success) {
                 setNewComment("")
-                // Optimistic or refetch
+                setCommentFiles([])
                 const user = {
                     id: currentUser.id,
                     name: currentUser.name,
@@ -74,10 +83,10 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                 setComments([...comments, {
                     id: `temp-${Date.now()}`,
                     content: newComment,
+                    attachments,
                     createdAt: new Date(),
                     user
                 }])
-                // In real app, revalidation might handle it, but for modal state:
                 getComments(task.id).then(r => r.success && r.data && setComments(r.data))
             }
         } catch (error) {
@@ -86,6 +95,29 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
             setIsSending(false)
         }
     }
+
+    const handleCommentFileUpload = async (files: FileList) => {
+        setIsUploadingComment(true)
+        for (const file of Array.from(files)) {
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
+                const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                const data = await res.json()
+                if (data.success) {
+                    setCommentFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size }])
+                }
+            } catch (err) { console.error(err) }
+        }
+        setIsUploadingComment(false)
+    }
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' o'
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' Ko'
+        return (bytes / 1048576).toFixed(1) + ' Mo'
+    }
+
 
     const handleToggleSubtask = async (subtaskId: string, current: boolean) => {
         try {
@@ -99,7 +131,7 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full h-full sm:h-[85vh] sm:max-w-4xl p-0 gap-0 overflow-hidden flex flex-col sm:flex-row">
+            <DialogContent className="w-full sm:max-w-4xl p-0 gap-0 overflow-hidden flex flex-col sm:flex-row max-h-[calc(100vh-2rem)]">
                 {/* Left: Details */}
                 <div className="flex-1 flex flex-col overflow-hidden bg-background">
                     <div className="p-6 border-b flex items-start justify-between">
@@ -159,6 +191,34 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                                     ))}
                                     {(!task.subtasks || task.subtasks.length === 0) && (
                                         <p className="text-xs text-muted-foreground italic">Aucune sous-tâche.</p>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* Attachments */}
+                            <section>
+                                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                    Fichiers
+                                </h3>
+                                <div className="space-y-2">
+                                    {task.attachments?.map((att: any) => (
+                                        <a
+                                            key={att.id}
+                                            href={att.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
+                                        >
+                                            <File className="h-4 w-4 text-primary flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{att.fileName}</p>
+                                                <p className="text-xs text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+                                            </div>
+                                        </a>
+                                    ))}
+                                    {(!task.attachments || task.attachments.length === 0) && (
+                                        <p className="text-xs text-muted-foreground italic">Aucun fichier attaché.</p>
                                     )}
                                 </div>
                             </section>
@@ -253,7 +313,25 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                                                     {format(new Date(comment.createdAt), "d MMM HH:mm", { locale: fr })}
                                                 </span>
                                             </div>
-                                            <p className="text-muted-foreground leading-snug">{comment.content}</p>
+                                            {comment.content && (
+                                                <p className="text-muted-foreground leading-snug">{comment.content}</p>
+                                            )}
+                                            {Array.isArray(comment.attachments) && comment.attachments.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    {comment.attachments.map((att: any, i: number) => (
+                                                        <a
+                                                            key={i}
+                                                            href={att.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-md hover:bg-primary/20"
+                                                        >
+                                                            <File className="h-3 w-3" />
+                                                            <span className="truncate max-w-[120px]">{att.name}</span>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))
@@ -262,19 +340,59 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                     </div>
 
                     <div className="p-4 border-t bg-background">
+                        <input
+                            ref={commentFileRef}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => e.target.files && handleCommentFileUpload(e.target.files)}
+                        />
+
+                        {/* Attached files preview */}
+                        {commentFiles.length > 0 && (
+                            <div className="mb-2 space-y-1">
+                                {commentFiles.map((f, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-xs bg-muted/30 rounded-md px-2 py-1">
+                                        <File className="h-3 w-3 text-primary flex-shrink-0" />
+                                        <span className="flex-1 truncate">{f.name}</span>
+                                        <span className="text-muted-foreground">{formatFileSize(f.size)}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCommentFiles(prev => prev.filter((_, j) => j !== i))}
+                                            className="text-muted-foreground hover:text-destructive"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="flex gap-2">
                             <Textarea
                                 placeholder="Écrire un commentaire..."
-                                className="min-h-[80px] resize-none"
+                                className="min-h-[70px] resize-none"
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSendComment()
+                                }}
                             />
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Paperclip className="h-4 w-4" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => commentFileRef.current?.click()}
+                                disabled={isUploadingComment}
+                                title="Joindre un fichier"
+                            >
+                                {isUploadingComment
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <Paperclip className="h-4 w-4" />}
                             </Button>
-                            <Button size="sm" onClick={handleSendComment} disabled={isSending || !newComment.trim()}>
+                            <Button size="sm" onClick={handleSendComment} disabled={isSending || (!newComment.trim() && commentFiles.length === 0)}>
                                 {isSending ? <Clock className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
                                 <span className="sr-only">Envoyer</span>
                             </Button>

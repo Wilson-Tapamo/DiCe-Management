@@ -64,9 +64,6 @@ export function ConsultantDetailsModal({ consultant, open, onOpenChange }: Consu
                             <TabsTrigger value="overview">
                                 Vue d'ensemble
                             </TabsTrigger>
-                            <TabsTrigger value="finances">
-                                Finances
-                            </TabsTrigger>
                             <TabsTrigger value="cv">
                                 CV & Parcours
                             </TabsTrigger>
@@ -89,8 +86,8 @@ export function ConsultantDetailsModal({ consultant, open, onOpenChange }: Consu
                                     <div className="text-2xl font-bold">{consultant._count?.assignedTasks || 0}</div>
                                 </div>
                                 <div className="p-4 rounded-lg bg-muted/30 border text-center">
-                                    <div className="text-sm text-muted-foreground mb-1">Taux Horaire</div>
-                                    <div className="text-2xl font-bold">{Number(consultant.hourlyRate) || 0} FCFA</div>
+                                    <div className="text-sm text-muted-foreground mb-1">Salaire Mensuel</div>
+                                    <div className="text-2xl font-bold">{Number(consultant.monthlySalary) || 0} FCFA</div>
                                 </div>
                             </div>
 
@@ -119,93 +116,6 @@ export function ConsultantDetailsModal({ consultant, open, onOpenChange }: Consu
                                     )}
                                 </div>
                             </div>
-                        </TabsContent>
-
-                        {/* FINANCES TAB */}
-                        <TabsContent value="finances" className="mt-0 space-y-6">
-                            {(() => {
-                                // Calculate total hours and revenue from workedHours
-                                const workedHours = Array.isArray(consultant.workedHours) ? consultant.workedHours : []
-                                const totalHours = workedHours.reduce((sum: number, wh: any) => sum + Number(wh.hours || 0), 0)
-                                const totalRevenue = totalHours * Number(consultant.hourlyRate || 0)
-                                const completedTasksHours = workedHours.filter((wh: any) => wh.task?.status === 'COMPLETED')
-                                const completedHours = completedTasksHours.reduce((sum: number, wh: any) => sum + Number(wh.hours || 0), 0)
-                                const completedRevenue = completedHours * Number(consultant.hourlyRate || 0)
-
-                                return (
-                                    <>
-                                        {/* Revenue Summary */}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border border-emerald-200 dark:border-emerald-800">
-                                                <div className="text-sm text-emerald-600 dark:text-emerald-400 mb-1">Revenu Total Généré</div>
-                                                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{completedRevenue.toLocaleString()} FCFA</div>
-                                                <div className="text-xs text-emerald-600/70 mt-1">{completedHours}h sur tâches terminées</div>
-                                            </div>
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800">
-                                                <div className="text-sm text-blue-600 dark:text-blue-400 mb-1">Revenu en Cours</div>
-                                                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{(totalRevenue - completedRevenue).toLocaleString()} FCFA</div>
-                                                <div className="text-xs text-blue-600/70 mt-1">{totalHours - completedHours}h sur tâches non terminées</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Rate Info */}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 rounded-lg border bg-muted/30">
-                                                <div className="text-sm text-muted-foreground mb-1">Taux Horaire</div>
-                                                <div className="text-xl font-bold">{Number(consultant.hourlyRate).toLocaleString()} FCFA</div>
-                                            </div>
-                                            <div className="p-4 rounded-lg border bg-muted/30">
-                                                <div className="text-sm text-muted-foreground mb-1">Taux Journalier (8h)</div>
-                                                <div className="text-xl font-bold">{(Number(consultant.hourlyRate) * 8).toLocaleString()} FCFA</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Hours Breakdown by Task */}
-                                        <div className="space-y-4">
-                                            <h3 className="font-semibold text-sm">Détail des Heures par Tâche</h3>
-                                            {workedHours.length > 0 ? (
-                                                <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                                                    {workedHours.map((wh: any, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="font-medium text-sm truncate">{wh.task?.title || 'Tâche inconnue'}</div>
-                                                                <div className="text-xs text-muted-foreground truncate">{wh.task?.project?.name || 'Projet inconnu'}</div>
-                                                            </div>
-                                                            <div className="flex items-center gap-4 ml-4">
-                                                                <div className="text-right">
-                                                                    <div className="font-bold text-sm">{Number(wh.hours)}h</div>
-                                                                    <div className="text-xs text-muted-foreground">{(Number(wh.hours) * Number(consultant.hourlyRate)).toLocaleString()} FCFA</div>
-                                                                </div>
-                                                                <Badge variant={wh.task?.status === 'COMPLETED' ? 'default' : 'secondary'} className="text-xs">
-                                                                    {wh.task?.status === 'COMPLETED' ? 'Terminé' : wh.task?.status || '?'}
-                                                                </Badge>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center py-8 text-muted-foreground bg-muted/10 rounded-lg border border-dashed">
-                                                    Aucune heure enregistrée
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Activity Summary */}
-                                        <div className="p-4 rounded-lg border bg-muted/20">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div className="text-sm font-medium">Résumé</div>
-                                                    <div className="text-xs text-muted-foreground">Performance globale</div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-lg font-bold">{totalHours}h</div>
-                                                    <div className="text-sm text-primary font-medium">{totalRevenue.toLocaleString()} FCFA total</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                )
-                            })()}
                         </TabsContent>
 
                         <TabsContent value="cv" className="mt-0 space-y-8">

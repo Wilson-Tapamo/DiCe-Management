@@ -56,8 +56,8 @@ export function ConsultantsView({ consultants: initialConsultants }: Consultants
 
         return matchSearch && matchLevel && matchSkill
     }).sort((a, b) => {
-        if (sortBy === 'rate_desc') return Number(b.hourlyRate) - Number(a.hourlyRate)
-        if (sortBy === 'rate_asc') return Number(a.hourlyRate) - Number(b.hourlyRate)
+        if (sortBy === 'salary_desc') return Number(b.monthlySalary) - Number(a.monthlySalary)
+        if (sortBy === 'salary_asc') return Number(a.monthlySalary) - Number(b.monthlySalary)
         if (sortBy === 'rating_desc') return b.rating - a.rating
         if (sortBy === 'projects_desc') return (b._count?.consultingProjects || 0) - (a._count?.consultingProjects || 0)
         return a.name.localeCompare(b.name)
@@ -133,8 +133,8 @@ export function ConsultantsView({ consultants: initialConsultants }: Consultants
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="name_asc">Nom (A-Z)</SelectItem>
-                                    <SelectItem value="rate_desc">Taux (Décroissant)</SelectItem>
-                                    <SelectItem value="rate_asc">Taux (Croissant)</SelectItem>
+                                    <SelectItem value="salary_desc">Salaire (Décroissant)</SelectItem>
+                                    <SelectItem value="salary_asc">Salaire (Croissant)</SelectItem>
                                     <SelectItem value="rating_desc">Note (Décroissante)</SelectItem>
                                     <SelectItem value="projects_desc">Projets (Décroissant)</SelectItem>
                                 </SelectContent>

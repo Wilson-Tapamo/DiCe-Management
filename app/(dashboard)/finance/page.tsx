@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { FinanceDirectorView } from "@/components/finance/finance-view"
@@ -17,3 +18,4 @@ export default async function FinancePage() {
         </div>
     )
 }
+

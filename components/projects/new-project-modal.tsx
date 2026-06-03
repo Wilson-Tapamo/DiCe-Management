@@ -130,7 +130,7 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="relative w-full h-screen sm:h-auto sm:max-h-[90vh] sm:max-w-2xl overflow-y-auto">
+            <DialogContent className="relative w-full sm:max-w-2xl">
                 {isPending && (
                     <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-fade-in">
                         <div className="relative flex flex-col items-center gap-4">
