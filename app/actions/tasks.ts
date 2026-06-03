@@ -284,7 +284,7 @@ export async function getTaskHours(taskId: string) {
             where: { taskId },
             include: {
                 user: {
-                    select: { id: true, name: true, avatar: true, hourlyRate: true }
+                    select: { id: true, name: true, avatar: true, monthlySalary: true }
                 }
             }
         })
