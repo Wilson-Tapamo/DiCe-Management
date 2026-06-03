@@ -19,7 +19,7 @@ async function testAuth() {
             port: 3306,
             user: 'root',
             password: 'root',
-            database: 'optimum_juridis'
+            database: 'dice_management'
         });
 
         console.log('\n3. Connected to database');

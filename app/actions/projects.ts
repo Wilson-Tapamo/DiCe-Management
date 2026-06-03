@@ -11,7 +11,7 @@ const ProjectSchema = z.object({
     description: z.string().optional(),
 
     // Client info
-    clientName: z.string().min(1, "Client name is required"),
+    clientName: z.string().optional().or(z.literal("")),
     clientContact: z.string().optional(),
     clientPhone: z.string().optional(),
     clientEmail: z.string().email("Invalid email").optional().or(z.literal("")),

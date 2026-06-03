@@ -55,20 +55,10 @@ import { createProjectJson } from "@/app/actions/projects"
 const formSchema = z.object({
     name: z.string().min(2, "Le nom doit contenir au moins 2 caractères."),
     description: z.string().optional(),
-
-    // Client Info
-    clientName: z.string().min(2, "Nom du client requis."),
-    clientContact: z.string().optional(),
-    clientPhone: z.string().optional(),
-    clientEmail: z.string().email("Email invalide").optional().or(z.literal("")),
-
-    expertise: z.string().min(1, "Niveau d'expertise requis."),
     priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-    type: z.enum(["JURIDIQUE", "FINANCIER", "FISCAL"]),
-
     startDate: z.date().optional(),
     endDate: z.date().optional(),
-    consultantIds: z.array(z.string()).min(1, "Sélectionnez au moins un consultant."),
+    consultantIds: z.array(z.string()).min(1, "Sélectionnez au moins un membre du personnel."),
 })
 
 interface Consultant {
@@ -94,19 +84,9 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
         defaultValues: {
             name: project?.name || "",
             description: project?.description || "",
-            // Client
-            clientName: project?.clientName || "",
-            clientContact: project?.clientContact || "",
-            clientPhone: project?.clientPhone || "",
-            clientEmail: project?.clientEmail || "",
-            // Meta
-            expertise: project?.expertise || "",
             priority: project?.priority || "MEDIUM",
-            type: project?.type || "JURIDIQUE",
-            // Dates
             startDate: parseDate(project?.startDate),
             endDate: parseDate(project?.endDate),
-            // Team
             consultantIds: project?.consultants?.map((c: any) => c.id) || [],
         },
     })
@@ -150,11 +130,22 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full h-screen sm:h-auto sm:max-h-[90vh] sm:max-w-2xl overflow-y-auto">
+            <DialogContent className="relative w-full h-screen sm:h-auto sm:max-h-[90vh] sm:max-w-2xl overflow-y-auto">
+                {isPending && (
+                    <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-fade-in">
+                        <div className="relative flex flex-col items-center gap-4">
+                            <div className="h-16 w-16 rounded-full border-4 border-blue-600/25 border-t-blue-600 animate-spin" />
+                            <div className="text-center">
+                                <p className="font-semibold text-foreground text-base">Enregistrement en cours...</p>
+                                <p className="text-xs text-muted-foreground mt-1">Veuillez patienter un instant</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <DialogHeader>
                     <DialogTitle>{project ? "Modifier le Projet" : "Nouveau Projet"}</DialogTitle>
                     <DialogDescription>
-                        {project ? "Mettez à jour les informations du dossier." : "Création d'un nouveau dossier client."}
+                        {project ? "Mettez à jour les informations du projet." : "Création d'un nouveau projet ou événement de formation."}
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -169,39 +160,14 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Nom du dossier</FormLabel>
+                                            <FormLabel>Nom du projet / formation</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Ex: Audit Fiscal 2024" {...field} />
+                                                <Input placeholder="Ex: Formation RGPD 2024" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="type"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Type de projet</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionner" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="JURIDIQUE">Juridique</SelectItem>
-                                                    <SelectItem value="FINANCIER">Financier</SelectItem>
-                                                    <SelectItem value="FISCAL">Fiscal</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
                                     name="priority"
@@ -224,29 +190,6 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="expertise"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Expertise requise</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionner" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="Junior">Junior</SelectItem>
-                                                    <SelectItem value="Intermédiaire">Intermédiaire</SelectItem>
-                                                    <SelectItem value="Senior">Senior</SelectItem>
-                                                    <SelectItem value="Expert">Expert</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                             </div>
 
                             <FormField
@@ -256,73 +199,12 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                     <FormItem>
                                         <FormLabel>Description</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="Contexte et objectifs..." {...field} />
+                                            <Textarea placeholder="Objectifs de la formation, programme, etc..." {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                        </div>
-
-                        {/* Client Info */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">Informations Client</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="clientName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Société / Client</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Ex: ACME Corp" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="clientContact"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Interlocuteur</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Ex: Jean Dupont" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="clientEmail"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Email</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="jean@acme.com" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="clientPhone"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Téléphone</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="01 23 45 67 89" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
                         </div>
 
                         {/* Planning & Team */}
@@ -372,7 +254,7 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                     name="endDate"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col">
-                                            <FormLabel>Deadline</FormLabel>
+                                            <FormLabel>Deadline / Fin</FormLabel>
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
@@ -412,7 +294,7 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                 name="consultantIds"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Consultants assignés</FormLabel>
+                                        <FormLabel>Personnel assigné</FormLabel>
                                         <FormControl>
                                             <div className="border rounded-md p-2">
                                                 <div className="flex flex-wrap gap-2 mb-2">
@@ -430,14 +312,14 @@ export function NewProjectModal({ open, onOpenChange, consultants, project }: { 
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="outline" className="w-full justify-start text-muted-foreground">
-                                                            + Ajouter consultant
+                                                            + Ajouter du personnel
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="p-0" align="start">
                                                         <Command>
                                                             <CommandInput placeholder="Rechercher..." />
                                                             <CommandList>
-                                                                <CommandEmpty>Aucun consultant trouvé.</CommandEmpty>
+                                                                <CommandEmpty>Aucun personnel trouvé.</CommandEmpty>
                                                                 <CommandGroup>
                                                                     {consultants.map((consultant) => (
                                                                         <CommandItem

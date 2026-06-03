@@ -1,7 +1,7 @@
 -- Update user passwords with correct bcrypt hash for "password123"
 -- Run this in TablePlus
 
-USE optimum_juridis;
+USE dice_management;
 
 -- First, check if users exist
 SELECT id, email, name, role FROM User;

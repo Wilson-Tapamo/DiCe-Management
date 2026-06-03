@@ -9,7 +9,7 @@ async function testConnection() {
             port: 3306,
             user: 'root',
             password: 'root',
-            database: 'optimum_juridis'
+            database: 'dice_management'
         });
 
         console.log('✅ Connection successful!');

@@ -50,14 +50,13 @@ export function Topbar({ user }: TopbarProps) {
     const pathname = usePathname();
 
     const navItems = [
-        { title: "Dashboard Director", href: "/dashboard-director", icon: LayoutDashboard, roles: ["DIRECTOR"] },
-        { title: "Dashboard Consultant", href: "/dashboard-consultant", icon: LayoutDashboard, roles: ["CONSULTANT"] },
-        { title: "Projects", href: "/projects", icon: FolderKanban, roles: ["DIRECTOR", "CONSULTANT"] },
-        { title: "Tasks", href: "/tasks", icon: CheckSquare, roles: ["DIRECTOR", "CONSULTANT"] },
-        { title: "Consultants", href: "/consultants", icon: Users, roles: ["DIRECTOR"] },
-        { title: "Finance", href: "/finance", icon: TrendingUp, roles: ["DIRECTOR"] },
-        { title: "Reports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR"] },
-        { title: "Settings", href: "/settings", icon: Settings, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Tableau de bord (Directeur)", href: "/dashboard-director", icon: LayoutDashboard, roles: ["DIRECTOR"] },
+        { title: "Mon espace (Personnel)", href: "/dashboard-consultant", icon: LayoutDashboard, roles: ["CONSULTANT"] },
+        { title: "Projets", href: "/projects", icon: FolderKanban, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Tâches", href: "/tasks", icon: CheckSquare, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Personnel", href: "/consultants", icon: Users, roles: ["DIRECTOR"] },
+        { title: "Rapports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR"] },
+        { title: "Paramètres", href: "/settings", icon: Settings, roles: ["DIRECTOR", "CONSULTANT"] },
     ];
 
     const filteredNavItems = navItems.filter((item) =>
@@ -75,15 +74,15 @@ export function Topbar({ user }: TopbarProps) {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-72 p-0">
                     <div className="flex items-center gap-3 p-6 border-b">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30">
                             <Scale className="h-5 w-5 text-white" />
                         </div>
                         <div className="flex flex-col">
                             <span className="font-bold text-slate-900 dark:text-white">
-                                Optimum
+                                DiCe
                             </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
-                                Juridis Finance
+                                Management
                             </span>
                         </div>
                     </div>
@@ -97,19 +96,19 @@ export function Topbar({ user }: TopbarProps) {
                                     className={cn(
                                         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                                         isActive
-                                            ? "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400"
+                                            ? "bg-gradient-to-r from-blue-500/10 to-sky-500/10 text-blue-600 dark:text-blue-400"
                                             : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                                     )}
                                 >
                                     <item.icon
                                         className={cn(
                                             "h-5 w-5 flex-shrink-0",
-                                            isActive && "text-indigo-600 dark:text-indigo-400"
+                                            isActive && "text-blue-600 dark:text-blue-400"
                                         )}
                                     />
                                     <span>{item.title}</span>
                                     {isActive && (
-                                        <div className="ml-auto h-2 w-2 rounded-full bg-indigo-600" />
+                                        <div className="ml-auto h-2 w-2 rounded-full bg-blue-600" />
                                     )}
                                 </Link>
                             );
@@ -124,7 +123,7 @@ export function Topbar({ user }: TopbarProps) {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
                         type="search"
-                        placeholder="Search projects, tasks, invoices..."
+                        placeholder="Rechercher des projets, des tâches..."
                         className="pl-10 bg-slate-50/50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
                     />
                 </div>

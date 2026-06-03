@@ -77,14 +77,14 @@ export function ConsultantsView({ consultants: initialConsultants }: Consultants
         <div className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Consultants</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Personnel</h1>
                     <p className="text-muted-foreground mt-1">
-                        Gérez votre équipe de consultants, leurs compétences et tarifs.
+                        Gérez les membres de votre personnel, leurs compétences et tarifs.
                     </p>
                 </div>
                 <Button onClick={handleCreate}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un Consultant
+                    Ajouter un membre
                 </Button>
             </div>
 
@@ -158,7 +158,7 @@ export function ConsultantsView({ consultants: initialConsultants }: Consultants
 
             {filteredConsultants.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground bg-muted/10 rounded-lg border border-dashed">
-                    Aucun consultant trouvé
+                    Aucun membre du personnel trouvé
                 </div>
             )}
 

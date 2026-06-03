@@ -75,7 +75,7 @@ export function ProjectsView({ initialProjects, consultants, currentUserRole }: 
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Projets</h1>
                     <p className="text-muted-foreground mt-1">
-                        Gérez et suivez tous vos dossiers juridiques
+                        Gérez et suivez toutes vos formations, conférences et événements.
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -94,7 +94,7 @@ export function ProjectsView({ initialProjects, consultants, currentUserRole }: 
                             <div className="relative flex-1 w-full sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
-                                    placeholder="Rechercher projets, clients..."
+                                    placeholder="Rechercher des projets..."
                                     className="pl-10"
                                     defaultValue={searchParams.get("search")?.toString()}
                                     onChange={(e) => handleSearch(e.target.value)}
@@ -124,10 +124,10 @@ export function ProjectsView({ initialProjects, consultants, currentUserRole }: 
                                     router.replace(`/projects?${params.toString()}`)
                                 }}>
                                     <SelectTrigger className="w-full sm:w-[180px]">
-                                        <SelectValue placeholder="Consultant" />
+                                        <SelectValue placeholder="Personnel" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="ALL">Tous les consultants</SelectItem>
+                                        <SelectItem value="ALL">Tout le personnel</SelectItem>
                                         {consultants.map(c => (
                                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                         ))}
@@ -181,8 +181,7 @@ export function ProjectsView({ initialProjects, consultants, currentUserRole }: 
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Projet / Client</TableHead>
+                                <TableHead>Projet</TableHead>
                                 <TableHead>Statut</TableHead>
                                 <TableHead>Priorité</TableHead>
                                 <TableHead>Progression</TableHead>

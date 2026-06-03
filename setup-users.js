@@ -10,7 +10,7 @@ async function setupUsers() {
             port: 3306,
             user: 'root',
             password: 'root',
-            database: 'optimum_juridis'
+            database: 'dice_management'
         });
 
         console.log('✅ Connected to database\n');

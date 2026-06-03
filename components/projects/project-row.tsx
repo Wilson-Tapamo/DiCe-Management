@@ -37,15 +37,9 @@ export function ProjectRow({ project, onClick, onEdit, onStatusChange }: Project
 
     return (
         <TableRow className="cursor-pointer hover:bg-muted/50" onClick={onClick}>
-            <TableCell>
-                <Badge variant="outline" className="text-[10px]">
-                    {project.type || "JURIDIQUE"}
-                </Badge>
-            </TableCell>
             <TableCell className="font-medium">
                 <div>
                     <div className="font-semibold">{project.name}</div>
-                    <div className="text-xs text-muted-foreground">{project.clientName}</div>
                 </div>
             </TableCell>
             <TableCell>

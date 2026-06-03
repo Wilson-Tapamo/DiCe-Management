@@ -1,7 +1,7 @@
--- Optimum Juridis Finance Database Schema
+-- DiCe Management Database Schema
 -- Run this in your MariaDB client
 
-USE optimum_juridis;
+USE dice_management;
 
 -- User table
 CREATE TABLE IF NOT EXISTS `User` (

@@ -59,13 +59,8 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
                             <div>
                                 <div className="flex items-center gap-3">
                                     <DialogTitle className="text-2xl font-bold">{project.name}</DialogTitle>
-                                    <Badge variant="outline">{project.type}</Badge>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                    <span className="flex items-center gap-1 font-medium text-foreground">
-                                        {project.clientName}
-                                    </span>
-                                    <span>•</span>
                                     <span className="flex items-center gap-1">
                                         <Calendar className="h-3 w-3" />
                                         Deadline: {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Non défini'}
@@ -116,40 +111,6 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
                                     </h3>
                                     <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                                         {project.description || "Aucune description fournie pour ce projet."}
-                                    </div>
-                                </section>
-
-                                {/* Client Details Large */}
-                                <section>
-                                    <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
-                                        <User className="h-4 w-4 text-muted-foreground" />
-                                        Informations Client
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="p-4 border rounded-lg bg-card">
-                                            <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Société</p>
-                                            <p className="font-medium text-lg">{project.clientName}</p>
-                                        </div>
-                                        <div className="p-4 border rounded-lg bg-card">
-                                            <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Contact Principal</p>
-                                            <p className="font-medium text-lg">{project.clientContact || "-"}</p>
-                                        </div>
-                                        <div className="p-4 border rounded-lg bg-card">
-                                            <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Email</p>
-                                            {project.clientEmail ? (
-                                                <a href={`mailto:${project.clientEmail}`} className="text-primary hover:underline flex items-center gap-2">
-                                                    <Mail className="h-3 w-3" /> {project.clientEmail}
-                                                </a>
-                                            ) : <p>-</p>}
-                                        </div>
-                                        <div className="p-4 border rounded-lg bg-card">
-                                            <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Téléphone</p>
-                                            {project.clientPhone ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="h-3 w-3" /> {project.clientPhone}
-                                                </div>
-                                            ) : <p>-</p>}
-                                        </div>
                                     </div>
                                 </section>
                             </TabsContent>
@@ -250,10 +211,6 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
                                     <Badge variant={project.priority === 'HIGH' ? 'destructive' : 'secondary'}>{project.priority}</Badge>
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-border/50">
-                                    <span className="text-sm text-muted-foreground">Expertise</span>
-                                    <span className="text-sm font-medium">{project.expertise || "Non défini"}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2 border-b border-border/50">
                                     <span className="text-sm text-muted-foreground">Début</span>
                                     <span className="text-sm font-medium">{project.startDate ? new Date(project.startDate).toLocaleDateString() : '-'}</span>
                                 </div>
@@ -291,7 +248,7 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
                                             </Avatar>
                                             <div className="overflow-hidden">
                                                 <p className="text-sm font-medium truncate">{member.name}</p>
-                                                <p className="text-xs text-muted-foreground">Consultant</p>
+                                                <p className="text-xs text-muted-foreground">Personnel</p>
                                             </div>
                                         </div>
                                     ))}

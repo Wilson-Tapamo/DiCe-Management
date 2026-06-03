@@ -87,7 +87,7 @@ export default async function DirectorDashboard() {
                         Tableau de Bord
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base">
-                        Bienvenue, {session?.user?.name}. Voici un aperçu de votre cabinet.
+                        Bienvenue, {session?.user?.name}. Voici un aperçu de vos activités de formation.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
@@ -139,11 +139,11 @@ export default async function DirectorDashboard() {
 
             {/* Main Content Grid */}
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-                {/* Consultants Performance */}
+                {/* Personnel Performance */}
                 <Card className="col-span-1 overflow-hidden">
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
-                            <CardTitle className="text-lg">Performance Consultants</CardTitle>
+                            <CardTitle className="text-lg">Performance du Personnel</CardTitle>
                             <CardDescription>Top performeurs par tâches complétées</CardDescription>
                         </div>
                         <Link href="/consultants">
@@ -174,7 +174,7 @@ export default async function DirectorDashboard() {
                             ))}
                             {data.consultants.length === 0 && (
                                 <div className="text-center py-8 text-muted-foreground text-sm">
-                                    Aucun consultant trouvé.
+                                    Aucun membre du personnel trouvé.
                                 </div>
                             )}
                         </div>
