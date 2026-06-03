@@ -8,9 +8,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Optimum Juridis Finance",
+  title: "DiCe Management",
   description:
-    "Legal finance management dashboard for directors and consultants",
+    "Plateforme de gestion des formations et conferences de Diamond Center",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
       <body className={`${outfit.variable} font-sans antialiased`}>
         {children}
       </body>
