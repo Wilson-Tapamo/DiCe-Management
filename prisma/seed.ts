@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("Start seeding DiCe Management...");
 
-    await prisma.taskAttachment.deleteMany();
     await prisma.notification.deleteMany();
     await prisma.financeEntry.deleteMany();
     await prisma.taskHours.deleteMany();
