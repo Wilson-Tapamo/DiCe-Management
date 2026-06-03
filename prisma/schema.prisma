@@ -85,7 +85,7 @@ model User {
   // Consultant Profile
   title         String?
   description   String?   @db.Text
-  hourlyRate    Decimal   @default(0) @db.Decimal(10, 2)
+  monthlySalary Decimal   @default(0) @db.Decimal(10, 2)
   level         ConsultantLevel @default(JUNIOR)
   rating        Float     @default(0)
   skills        Json?     // Array of strings
@@ -104,6 +104,7 @@ model User {
   workedHours   TaskHours[]
   financeEntries FinanceEntry[]
   notifications Notification[]
+  uploadedAttachments TaskAttachment[] @relation("UserUploadedAttachments")
   
   consultingProjects Project[] @relation("ProjectConsultants")
 }
@@ -170,6 +171,7 @@ model Task {
   workedHours     TaskHours[]
   invoiceLines    InvoiceLine[]
   financeEntries  FinanceEntry[]
+  attachments     TaskAttachment[]
 }
 
 model SubTask {
@@ -307,4 +309,18 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model TaskAttachment {
+  id           String   @id @default(cuid())
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  createdAt    DateTime @default(now())
+  
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  uploadedById String
+  uploadedBy   User     @relation("UserUploadedAttachments", fields: [uploadedById], references: [id])
 }
