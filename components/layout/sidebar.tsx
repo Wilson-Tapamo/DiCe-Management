@@ -13,6 +13,7 @@ import {
     CreditCard,
     TrendingUp,
     FileBarChart,
+    FolderOpen,
     Settings,
     ChevronLeft,
     ChevronRight,
@@ -67,6 +68,12 @@ const navItems: NavItem[] = [
         title: "Rapports",
         href: "/reports",
         icon: FileBarChart,
+        roles: ["DIRECTOR", "CONSULTANT"],
+    },
+    {
+        title: "Documents",
+        href: "/documents",
+        icon: FolderOpen,
         roles: ["DIRECTOR", "CONSULTANT"],
     },
     {

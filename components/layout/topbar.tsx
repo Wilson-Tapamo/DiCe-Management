@@ -27,6 +27,7 @@ import {
     CreditCard,
     TrendingUp,
     FileBarChart,
+    FolderOpen,
     Scale,
     Menu,
     Settings,
@@ -55,7 +56,8 @@ export function Topbar({ user }: TopbarProps) {
         { title: "Projets", href: "/projects", icon: FolderKanban, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Tâches", href: "/tasks", icon: CheckSquare, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Personnel", href: "/consultants", icon: Users, roles: ["DIRECTOR"] },
-        { title: "Rapports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR"] },
+        { title: "Rapports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Documents", href: "/documents", icon: FolderOpen, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Paramètres", href: "/settings", icon: Settings, roles: ["DIRECTOR", "CONSULTANT"] },
     ];
 

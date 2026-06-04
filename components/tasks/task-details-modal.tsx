@@ -35,6 +35,7 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { getInitials } from "@/lib/utils"
 import { addComment, toggleSubtask, getComments } from "@/app/actions/tasks"
+import { uploadFile } from "@/lib/upload-client"
 // import { Comment } from "@prisma/client" // Avoid direct import if possible, use any
 
 interface TaskDetailsModalProps {
@@ -100,14 +101,15 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
         setIsUploadingComment(true)
         for (const file of Array.from(files)) {
             try {
-                const formData = new FormData()
-                formData.append('file', file)
-                const res = await fetch('/api/upload', { method: 'POST', body: formData })
-                const data = await res.json()
-                if (data.success) {
-                    setCommentFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size }])
-                }
-            } catch (err) { console.error(err) }
+                const data = await uploadFile(file, {
+                    projectId: task.projectId || task.project?.id,
+                    taskId: task.id,
+                    category: 'commentaire',
+                })
+                setCommentFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size }])
+            } catch (err) {
+                console.error(err)
+            }
         }
         setIsUploadingComment(false)
     }

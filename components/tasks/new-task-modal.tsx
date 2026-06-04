@@ -44,6 +44,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getInitials } from "@/lib/utils"
+import { uploadFile } from "@/lib/upload-client"
 
 interface NewTaskModalProps {
     open: boolean
@@ -143,19 +144,18 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
 
     const handleFileUpload = async (files: FileList | File[]) => {
         const fileArray = Array.from(files)
+        const projectId = form.getValues('projectId') || task?.projectId
         setIsUploading(true)
         for (const file of fileArray) {
             try {
-                const formData = new FormData()
-                formData.append('file', file)
-                const res = await fetch('/api/upload', { method: 'POST', body: formData })
-                const data = await res.json()
-                if (data.success) {
-                    setUploadedFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size, type: file.type }])
-                    // If editing, save attachment immediately
-                    if (task?.id) {
-                        await addTaskAttachment(task.id, { fileName: data.name, fileUrl: data.url, fileSize: data.size })
-                    }
+                const data = await uploadFile(file, {
+                    projectId: projectId || undefined,
+                    taskId: task?.id,
+                    category: 'tache',
+                })
+                setUploadedFiles(prev => [...prev, { url: data.url, name: data.name, size: data.size, type: file.type }])
+                if (task?.id) {
+                    await addTaskAttachment(task.id, { fileName: data.name, fileUrl: data.url, fileSize: data.size })
                 }
             } catch (err) {
                 console.error('Upload error:', err)

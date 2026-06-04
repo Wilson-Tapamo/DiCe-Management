@@ -340,6 +340,7 @@ export async function addTaskAttachment(taskId: string, data: { fileName: string
             }
         })
         revalidatePath("/tasks")
+        revalidatePath("/documents")
         return { success: true, data: attachment }
     } catch (error) {
         console.error("Add attachment error:", error)
