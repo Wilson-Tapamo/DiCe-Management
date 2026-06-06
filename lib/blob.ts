@@ -18,10 +18,3 @@ export function buildBlobPathname(opts: {
     return `documents/${category}/${safeName}`
 }
 
-export function getBlobToken(): string | undefined {
-    return (
-        process.env.BLOB_READ_WRITE_TOKEN ||
-        process.env.vercel_blob_rw_token ||
-        process.env.VERCEL_BLOB_RW_TOKEN
-    )
-}

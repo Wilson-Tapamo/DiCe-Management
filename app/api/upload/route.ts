@@ -4,7 +4,7 @@ export const runtime = 'nodejs'
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { auth } from '@/lib/auth'
-import { buildBlobPathname, getBlobToken, type BlobCategory } from '@/lib/blob'
+import { buildBlobPathname, type BlobCategory } from '@/lib/blob'
 
 const MAX_SIZE = 10 * 1024 * 1024
 const VALID_CATEGORIES: BlobCategory[] = ['tache', 'commentaire', 'document']
@@ -14,15 +14,6 @@ export async function POST(request: NextRequest) {
         const session = await auth()
         if (!session?.user) {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-        }
-
-        const token = getBlobToken()
-        if (!token) {
-            console.error('Upload error: BLOB_READ_WRITE_TOKEN manquant')
-            return NextResponse.json(
-                { error: 'Stockage Blob non configuré (BLOB_READ_WRITE_TOKEN)' },
-                { status: 503 }
-            )
         }
 
         const data = await request.formData()
@@ -52,7 +43,6 @@ export async function POST(request: NextRequest) {
 
         const blob = await put(pathname, file, {
             access: 'public',
-            token,
             contentType: file.type || undefined,
         })
 
