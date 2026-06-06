@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { getInitials } from "@/lib/utils"
 import { addComment, toggleSubtask, getComments } from "@/app/actions/tasks"
 import { uploadFile } from "@/lib/upload-client"
+import { FileAttachmentItem } from "./file-attachment-item"
 // import { Comment } from "@prisma/client" // Avoid direct import if possible, use any
 
 interface TaskDetailsModalProps {
@@ -203,26 +204,18 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                                     <Paperclip className="h-4 w-4 text-muted-foreground" />
                                     Fichiers
                                 </h3>
-                                <div className="space-y-2">
+                                <div className="space-y-3 grid grid-cols-2 gap-3">
                                     {task.attachments?.map((att: any) => (
-                                        <a
+                                        <FileAttachmentItem
                                             key={att.id}
-                                            href={att.fileUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
-                                        >
-                                            <File className="h-4 w-4 text-primary flex-shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium truncate">{att.fileName}</p>
-                                                <p className="text-xs text-muted-foreground">{formatFileSize(att.fileSize)}</p>
-                                            </div>
-                                        </a>
+                                            file={{ url: att.fileUrl, name: att.fileName, size: att.fileSize }}
+                                            formatFileSize={formatFileSize}
+                                        />
                                     ))}
-                                    {(!task.attachments || task.attachments.length === 0) && (
-                                        <p className="text-xs text-muted-foreground italic">Aucun fichier attaché.</p>
-                                    )}
                                 </div>
+                                {(!task.attachments || task.attachments.length === 0) && (
+                                    <p className="text-xs text-muted-foreground italic">Aucun fichier attaché.</p>
+                                )}
                             </section>
 
                             {/* Budget & Meta */}
@@ -319,18 +312,15 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
                                                 <p className="text-muted-foreground leading-snug">{comment.content}</p>
                                             )}
                                             {Array.isArray(comment.attachments) && comment.attachments.length > 0 && (
-                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                <div className="flex flex-wrap gap-2 pt-2">
                                                     {comment.attachments.map((att: any, i: number) => (
-                                                        <a
-                                                            key={i}
-                                                            href={att.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-md hover:bg-primary/20"
-                                                        >
-                                                            <File className="h-3 w-3" />
-                                                            <span className="truncate max-w-[120px]">{att.name}</span>
-                                                        </a>
+                                                        <div key={i} className="w-full sm:w-[140px]">
+                                                            <FileAttachmentItem
+                                                                file={{ url: att.url, name: att.name, size: att.size }}
+                                                                isPreview={true}
+                                                                formatFileSize={formatFileSize}
+                                                            />
+                                                        </div>
                                                     ))}
                                                 </div>
                                             )}
@@ -352,19 +342,15 @@ export function TaskDetailsModal({ task, open, onOpenChange, onEdit, currentUser
 
                         {/* Attached files preview */}
                         {commentFiles.length > 0 && (
-                            <div className="mb-2 space-y-1">
+                            <div className="mb-2 space-y-2 grid grid-cols-2 gap-2">
                                 {commentFiles.map((f, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-xs bg-muted/30 rounded-md px-2 py-1">
-                                        <File className="h-3 w-3 text-primary flex-shrink-0" />
-                                        <span className="flex-1 truncate">{f.name}</span>
-                                        <span className="text-muted-foreground">{formatFileSize(f.size)}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCommentFiles(prev => prev.filter((_, j) => j !== i))}
-                                            className="text-muted-foreground hover:text-destructive"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
+                                    <div key={i} className="w-full">
+                                        <FileAttachmentItem
+                                            file={f}
+                                            onRemove={() => setCommentFiles(prev => prev.filter((_, j) => j !== i))}
+                                            isPreview={true}
+                                            formatFileSize={formatFileSize}
+                                        />
                                     </div>
                                 ))}
                             </div>

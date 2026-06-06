@@ -7,7 +7,7 @@ import { createTask, updateTask, addTaskAttachment, deleteTaskAttachment } from 
 import { TaskSchema, TaskInput } from "@/lib/schemas"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Loader2, Plus, Trash2, X, Paperclip, Upload, File, ImageIcon, FileText, Trash } from "lucide-react"
+import { Calendar as CalendarIcon, Loader2, Plus, Trash2, X, Paperclip, Upload } from "lucide-react"
 import { fr } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getInitials } from "@/lib/utils"
 import { uploadFile } from "@/lib/upload-client"
+import { FileAttachmentItem } from "./file-attachment-item"
 
 interface NewTaskModalProps {
     open: boolean
@@ -180,13 +181,6 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
             const attachment = task.attachments.find((a: any) => a.fileUrl === file.url)
             if (attachment) await deleteTaskAttachment(attachment.id)
         }
-    }
-
-    const getFileIcon = (type?: string) => {
-        if (!type) return <File className="h-4 w-4" />
-        if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-blue-500" />
-        if (type.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />
-        return <File className="h-4 w-4 text-slate-500" />
     }
 
     const formatFileSize = (bytes: number) => {
@@ -529,35 +523,19 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
                                 </div>
 
                                 {uploadedFiles.length > 0 && (
-                                    <div className="mt-4 space-y-2">
+                                    <div className="mt-4 space-y-3">
                                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fichiers attachés ({uploadedFiles.length})</p>
-                                        {uploadedFiles.map((file, index) => (
-                                            <div key={index} className="flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors group">
-                                                {getFileIcon(file.type)}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">{file.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {uploadedFiles.map((file, index) => (
+                                                <div key={index}>
+                                                    <FileAttachmentItem
+                                                        file={file}
+                                                        onRemove={() => removeFile(index)}
+                                                        formatFileSize={formatFileSize}
+                                                    />
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <a
-                                                        href={file.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-primary hover:underline px-1"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        Ouvrir
-                                                    </a>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => { e.stopPropagation(); removeFile(index) }}
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-destructive"
-                                                    >
-                                                        <Trash className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </TabsContent>
