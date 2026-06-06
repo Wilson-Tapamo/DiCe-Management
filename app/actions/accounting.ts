@@ -101,6 +101,51 @@ export async function getJournalEntries(journalId: string, filters?: {
   }
 }
 
+export async function getGeneralJournalEntries(filters?: {
+  startDate?: string
+  endDate?: string
+}) {
+  const session = await auth()
+  if (!session?.user || (session.user as any)?.role !== "DIRECTOR") {
+    return { success: false, error: "Non autorisé" }
+  }
+
+  try {
+    const where: any = {}
+    if (filters?.startDate || filters?.endDate) {
+      where.date = {}
+      if (filters.startDate) where.date.gte = new Date(filters.startDate)
+      if (filters.endDate) where.date.lte = new Date(filters.endDate)
+    }
+
+    const entries = await prisma.accountEntry.findMany({
+      where,
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        journal: { select: { label: true, code: true, type: true } },
+      },
+      orderBy: { date: 'desc' },
+    })
+
+    const totalDebit = entries.reduce((s, e) => s + Number(e.debit), 0)
+    const totalCredit = entries.reduce((s, e) => s + Number(e.credit), 0)
+
+    return {
+      success: true,
+      data: {
+        entries: JSON.parse(JSON.stringify(entries)),
+        totalDebit,
+        totalCredit,
+        balance: totalDebit - totalCredit,
+        count: entries.length,
+      },
+    }
+  } catch (error) {
+    console.error("Get general journal error:", error)
+    return { success: false, error: "Erreur lors du chargement" }
+  }
+}
+
 export async function createManualAccountingEntry(data: {
   journalId: string
   date?: string

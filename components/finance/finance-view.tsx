@@ -39,20 +39,20 @@ import {
     FileText,
     BookOpen,
     BookCheck,
+    BookOpenCheck,
     Trash2,
     Loader2,
     RefreshCw,
     Landmark,
     Receipt,
     ShoppingCart,
-    Car,
-    Plane,
     Wallet,
 } from "lucide-react"
 import {
     getFinanceDashboardWithJournals,
     getJournals,
     getJournalEntries,
+    getGeneralJournalEntries,
     createManualAccountingEntry,
     deleteAccountingEntry,
     getAccountChart,
@@ -61,6 +61,7 @@ import {
 import { queueOperation } from "@/lib/offline/sync"
 
 const JOURNAL_ICONS: Record<string, any> = {
+    GENERAL: BookOpenCheck,
     VENTES: Receipt,
     ACHATS: ShoppingCart,
     BANQUE: Landmark,
@@ -69,24 +70,42 @@ const JOURNAL_ICONS: Record<string, any> = {
     PAIE: FileText,
 }
 
+const GENERAL_JOURNAL = {
+    id: 'general',
+    type: 'GENERAL',
+    label: 'Journal Général',
+    code: 'GÉN',
+    _count: { entries: 0 },
+    totalDebit: 0,
+    totalCredit: 0,
+}
+
 export function FinanceDirectorView() {
     const [activeTab, setActiveTab] = useState("dashboard")
     const [isPending, startTransition] = useTransition()
 
     const [dashboardData, setDashboardData] = useState<any>(null)
     const [journals, setJournals] = useState<any[]>([])
-    const [selectedJournal, setSelectedJournal] = useState<any>(null)
+    const [selectedJournal, setSelectedJournal] = useState<any>(GENERAL_JOURNAL)
     const [journalEntries, setJournalEntries] = useState<any>(null)
     const [isAddEntryOpen, setIsAddEntryOpen] = useState(false)
     const [isBackfilling, setIsBackfilling] = useState(false)
 
     const [startDate, setStartDate] = useState("")
     const [endDate, setEndDate] = useState("")
+    const [jStartDate, setJStartDate] = useState("")
+    const [jEndDate, setJEndDate] = useState("")
 
     useEffect(() => {
         loadDashboard()
         loadJournals()
     }, [startDate, endDate])
+
+    useEffect(() => {
+        if (activeTab === "journals") {
+            openJournal(selectedJournal || GENERAL_JOURNAL)
+        }
+    }, [activeTab, jStartDate, jEndDate])
 
     async function loadDashboard() {
         const filters: any = {}
@@ -104,10 +123,16 @@ export function FinanceDirectorView() {
     async function openJournal(journal: any) {
         setSelectedJournal(journal)
         const filters: any = {}
-        if (startDate) filters.startDate = startDate
-        if (endDate) filters.endDate = endDate
-        const result = await getJournalEntries(journal.id, filters)
-        if (result.success) setJournalEntries(result.data)
+        if (jStartDate) filters.startDate = jStartDate
+        if (jEndDate) filters.endDate = jEndDate
+
+        if (journal.id === 'general') {
+            const result = await getGeneralJournalEntries(filters)
+            if (result.success) setJournalEntries(result.data)
+        } else {
+            const result = await getJournalEntries(journal.id, filters)
+            if (result.success) setJournalEntries(result.data)
+        }
     }
 
     async function handleBackfill() {
@@ -116,11 +141,13 @@ export function FinanceDirectorView() {
         setIsBackfilling(false)
         loadDashboard()
         loadJournals()
+        openJournal(selectedJournal || GENERAL_JOURNAL)
     }
 
-    const maxChartValue = dashboardData?.monthlyData
-        ? Math.max(...dashboardData.monthlyData.map((m: any) => Math.max(m.income, m.expense)))
-        : 0
+    function renderJournalIcon(type: string, className?: string) {
+        const Icon = JOURNAL_ICONS[type] || BookOpen
+        return <Icon className={className || "h-5 w-5"} />
+    }
 
     return (
         <div className="space-y-6">
@@ -178,7 +205,6 @@ export function FinanceDirectorView() {
                         </div>
                     </div>
 
-                    {/* Summary Cards */}
                     <div className="grid gap-4 md:grid-cols-4">
                         <Card className="border-l-4 border-l-green-500">
                             <CardContent className="p-6">
@@ -242,7 +268,6 @@ export function FinanceDirectorView() {
                         </Card>
                     </div>
 
-                    {/* Journal Summary Cards */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Journaux Comptables OHADA</CardTitle>
@@ -253,7 +278,6 @@ export function FinanceDirectorView() {
                         <CardContent>
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {dashboardData?.journalsSummary?.map((j: any) => {
-                                    const Icon = JOURNAL_ICONS[j.type] || BookOpen
                                     const colorMap: Record<string, string> = {
                                         VENTES: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200',
                                         ACHATS: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200',
@@ -270,7 +294,7 @@ export function FinanceDirectorView() {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-lg bg-white/50 dark:bg-black/20">
-                                                    <Icon className="h-5 w-5" />
+                                                    {renderJournalIcon(j.type, "h-5 w-5")}
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold">{j.label}</p>
@@ -288,7 +312,6 @@ export function FinanceDirectorView() {
                         </CardContent>
                     </Card>
 
-                    {/* Recent Entries */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
@@ -344,27 +367,58 @@ export function FinanceDirectorView() {
 
                 {/* JOURNALS TAB */}
                 <TabsContent value="journals" className="space-y-6">
+                    {/* Period Filter */}
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white dark:bg-slate-950 p-4 rounded-lg border shadow-sm">
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4 text-slate-500" />
+                                <span className="text-sm font-medium">Période:</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="date"
+                                    value={jStartDate}
+                                    onChange={(e) => setJStartDate(e.target.value)}
+                                    className="w-auto h-9"
+                                />
+                                <span className="text-slate-400">-</span>
+                                <Input
+                                    type="date"
+                                    value={jEndDate}
+                                    onChange={(e) => setJEndDate(e.target.value)}
+                                    className="w-auto h-9"
+                                />
+                            </div>
+                            {(jStartDate || jEndDate) && (
+                                <Button variant="ghost" size="sm" onClick={() => { setJStartDate(""); setJEndDate("") }} className="h-9">
+                                    Effacer
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Journal Selector */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                        {journals.map((j: any) => {
-                            const Icon = JOURNAL_ICONS[j.type] || BookOpen
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+                        {[{ ...GENERAL_JOURNAL, _count: { entries: journalEntries?.count || 0 }, totalDebit: journalEntries?.totalDebit || 0 }, ...journals].map((j: any) => {
                             const isSelected = selectedJournal?.id === j.id
-                            const colorMap: Record<string, string> = {
-                                VENTES: isSelected ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950' : 'hover:bg-green-50 dark:hover:bg-green-950',
-                                ACHATS: isSelected ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950' : 'hover:bg-orange-50 dark:hover:bg-orange-950',
-                                BANQUE: isSelected ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : 'hover:bg-blue-50 dark:hover:bg-blue-950',
-                                CAISSE: isSelected ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950' : 'hover:bg-purple-50 dark:hover:bg-purple-950',
-                                OD: isSelected ? 'ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900' : 'hover:bg-slate-50 dark:hover:bg-slate-900',
-                                PAIE: isSelected ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950' : 'hover:bg-amber-50 dark:hover:bg-amber-950',
+                            let colorClass = 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            if (isSelected) {
+                                if (j.id === 'general') colorClass = 'ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950'
+                                else if (j.type === 'VENTES') colorClass = 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950'
+                                else if (j.type === 'ACHATS') colorClass = 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950'
+                                else if (j.type === 'BANQUE') colorClass = 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950'
+                                else if (j.type === 'CAISSE') colorClass = 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950'
+                                else if (j.type === 'OD') colorClass = 'ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900'
+                                else if (j.type === 'PAIE') colorClass = 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950'
                             }
                             return (
                                 <button
                                     key={j.id}
                                     onClick={() => openJournal(j)}
-                                    className={`p-3 rounded-xl border text-left transition-all ${colorMap[j.type] || 'hover:bg-muted'}`}
+                                    className={`p-3 rounded-xl border text-left transition-all ${colorClass}`}
                                 >
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Icon className="h-4 w-4" />
+                                        {renderJournalIcon(j.type, "h-4 w-4")}
                                         <span className="font-semibold text-sm">{j.code}</span>
                                     </div>
                                     <p className="text-xs text-muted-foreground">{j.label}</p>
@@ -383,14 +437,18 @@ export function FinanceDirectorView() {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
                                     <CardTitle className="flex items-center gap-2">
-                                        {(JOURNAL_ICONS[selectedJournal.type] || BookOpen)({ className: "h-5 w-5" })}
+                                        {renderJournalIcon(selectedJournal.type, "h-5 w-5")}
                                         {selectedJournal.label}
                                         <Badge variant="outline" className="ml-2">{selectedJournal.code}</Badge>
+                                        {selectedJournal.id === 'general' && (
+                                            <Badge variant="secondary" className="ml-1">Tous les journaux</Badge>
+                                        )}
                                     </CardTitle>
                                     <CardDescription>
-                                        Solde: {journalEntries.balance.toLocaleString()} FCFA •
-                                        Débit: {journalEntries.totalDebit.toLocaleString()} •
-                                        Crédit: {journalEntries.totalCredit.toLocaleString()}
+                                        {journalEntries.count || journalEntries.entries?.length || 0} écritures •
+                                        Débit: {journalEntries.totalDebit.toLocaleString()} FCFA •
+                                        Crédit: {journalEntries.totalCredit.toLocaleString()} FCFA •
+                                        Solde: {journalEntries.balance.toLocaleString()} FCFA
                                     </CardDescription>
                                 </div>
                                 <Button onClick={() => setIsAddEntryOpen(true)} size="sm">
@@ -400,10 +458,13 @@ export function FinanceDirectorView() {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[800px]">
+                                    <table className="w-full min-w-[900px]">
                                         <thead>
                                             <tr className="border-b border-slate-100 dark:border-slate-800">
                                                 <th className="text-left p-3 font-medium text-slate-500 text-sm">Date</th>
+                                                {selectedJournal.id === 'general' && (
+                                                    <th className="text-left p-3 font-medium text-slate-500 text-sm">Journal</th>
+                                                )}
                                                 <th className="text-left p-3 font-medium text-slate-500 text-sm">Pièce</th>
                                                 <th className="text-left p-3 font-medium text-slate-500 text-sm">Compte</th>
                                                 <th className="text-left p-3 font-medium text-slate-500 text-sm">Libellé</th>
@@ -419,6 +480,13 @@ export function FinanceDirectorView() {
                                                     <td className="p-3 text-sm">
                                                         {new Date(entry.date).toLocaleDateString('fr-FR')}
                                                     </td>
+                                                    {selectedJournal.id === 'general' && (
+                                                        <td className="p-3">
+                                                            <Badge variant="outline" className="text-xs font-mono">
+                                                                {entry.journal?.code || '-'}
+                                                            </Badge>
+                                                        </td>
+                                                    )}
                                                     <td className="p-3 text-sm text-muted-foreground">
                                                         {entry.pieceRef || '-'}
                                                     </td>
@@ -461,15 +529,15 @@ export function FinanceDirectorView() {
                                             ))}
                                             {(!journalEntries.entries || journalEntries.entries.length === 0) && (
                                                 <tr>
-                                                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                                                        Aucune écriture dans ce journal. Cliquez sur "Alimenter auto." pour générer les écritures depuis les données existantes.
+                                                    <td colSpan={selectedJournal.id === 'general' ? 9 : 8} className="p-8 text-center text-muted-foreground">
+                                                        Aucune écriture trouvée pour cette période. Cliquez sur "Alimenter auto." pour générer les écritures depuis les données existantes.
                                                     </td>
                                                 </tr>
                                             )}
                                         </tbody>
                                         <tfoot>
                                             <tr className="border-t-2 border-slate-200 dark:border-slate-700 font-bold">
-                                                <td colSpan={4} className="p-3 text-right">Totaux</td>
+                                                <td colSpan={selectedJournal.id === 'general' ? 4 : 3} className="p-3 text-right">Totaux</td>
                                                 <td className="p-3 text-right">{journalEntries.totalDebit.toLocaleString()} FCFA</td>
                                                 <td className="p-3 text-right">{journalEntries.totalCredit.toLocaleString()} FCFA</td>
                                                 <td colSpan={2}></td>
@@ -480,28 +548,14 @@ export function FinanceDirectorView() {
                             </CardContent>
                         </Card>
                     )}
-
-                    {!selectedJournal && (
-                        <Card>
-                            <CardContent className="p-12 text-center">
-                                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Sélectionnez un journal</h3>
-                                <p className="text-muted-foreground">
-                                    Choisissez un journal comptable ci-dessus pour voir ses écritures.
-                                    Les journaux suivent le plan comptable OHADA (Organisation pour l'Harmonisation du Droit des Affaires en Afrique).
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
                 </TabsContent>
             </Tabs>
 
-            {/* Add Accounting Entry Modal */}
             <AddJournalEntryModal
                 open={isAddEntryOpen}
                 onOpenChange={setIsAddEntryOpen}
                 journals={journals}
-                preselectedJournalId={selectedJournal?.id}
+                preselectedJournalId={selectedJournal?.id === 'general' ? undefined : selectedJournal?.id}
                 onSuccess={() => {
                     setIsAddEntryOpen(false)
                     loadDashboard()
@@ -531,6 +585,15 @@ function AddJournalEntryModal({ open, onOpenChange, journals, preselectedJournal
     const [credit, setCredit] = useState('')
     const [accountChart, setAccountChart] = useState<any[]>([])
 
+    const journalIcons: Record<string, any> = {
+        VENTES: Receipt,
+        ACHATS: ShoppingCart,
+        BANQUE: Landmark,
+        CAISSE: Wallet,
+        OD: BookOpen,
+        PAIE: FileText,
+    }
+
     useEffect(() => {
         getAccountChart().then((r) => {
             if (r.success) setAccountChart(r.data || [])
@@ -538,7 +601,7 @@ function AddJournalEntryModal({ open, onOpenChange, journals, preselectedJournal
     }, [])
 
     useEffect(() => {
-        setJournalId(preselectedJournalId || '')
+        if (preselectedJournalId) setJournalId(preselectedJournalId)
     }, [preselectedJournalId])
 
     const handleAccountSelect = (num: string) => {
@@ -596,8 +659,6 @@ function AddJournalEntryModal({ open, onOpenChange, journals, preselectedJournal
         })
     }
 
-    const selectedJournal = journals.find((j) => j.id === journalId)
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-md">
@@ -619,7 +680,7 @@ function AddJournalEntryModal({ open, onOpenChange, journals, preselectedJournal
                             </SelectTrigger>
                             <SelectContent>
                                 {journals.map((j) => {
-                                    const Icon = JOURNAL_ICONS[j.type] || BookOpen
+                                    const Icon = journalIcons[j.type] || BookOpen
                                     return (
                                         <SelectItem key={j.id} value={j.id}>
                                             <span className="flex items-center gap-2">
