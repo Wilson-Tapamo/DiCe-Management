@@ -55,6 +55,7 @@ export function Topbar({ user }: TopbarProps) {
         { title: "Mon espace (Personnel)", href: "/dashboard-consultant", icon: LayoutDashboard, roles: ["CONSULTANT"] },
         { title: "Projets", href: "/projects", icon: FolderKanban, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Tâches", href: "/tasks", icon: CheckSquare, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Finances", href: "/finance", icon: TrendingUp, roles: ["DIRECTOR"] },
         { title: "Personnel", href: "/consultants", icon: Users, roles: ["DIRECTOR"] },
         { title: "Rapports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Documents", href: "/documents", icon: FolderOpen, roles: ["DIRECTOR", "CONSULTANT"] },

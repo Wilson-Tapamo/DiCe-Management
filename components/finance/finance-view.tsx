@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import {
     Dialog,
@@ -30,202 +29,93 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
     TrendingUp,
     TrendingDown,
     DollarSign,
     Plus,
-    Search,
-    Filter,
-    Download,
-    MoreVertical,
     ArrowUpRight,
     ArrowDownLeft,
-    Calendar,
+    Calendar as CalendarIcon,
     FileText,
-    CheckCircle2,
-    Clock,
-    Send,
-    Eye,
+    BookOpen,
+    BookCheck,
     Trash2,
     Loader2,
+    RefreshCw,
+    Landmark,
     Receipt,
-    Edit,
-    Calendar as CalendarIcon,
+    ShoppingCart,
+    Car,
+    Plane,
+    Wallet,
 } from "lucide-react"
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import {
-    getFinanceDashboard,
-    getFinanceEntries,
-    createFinanceEntry,
-    deleteFinanceEntry
-} from "@/app/actions/finance"
-import {
-    getInvoices,
-    getInvoiceById,
-    validateInvoice,
-    markInvoiceAsPaid,
-    deleteInvoice,
-    addInvoiceLine,
-    updateInvoiceLine,
-    deleteInvoiceLine
-} from "@/app/actions/invoices"
+    getFinanceDashboardWithJournals,
+    getJournals,
+    getJournalEntries,
+    createManualAccountingEntry,
+    deleteAccountingEntry,
+    getAccountChart,
+    backfillJournalEntries,
+} from "@/app/actions/accounting"
+import { queueOperation } from "@/lib/offline/sync"
+
+const JOURNAL_ICONS: Record<string, any> = {
+    VENTES: Receipt,
+    ACHATS: ShoppingCart,
+    BANQUE: Landmark,
+    CAISSE: Wallet,
+    OD: BookOpen,
+    PAIE: FileText,
+}
 
 export function FinanceDirectorView() {
     const [activeTab, setActiveTab] = useState("dashboard")
     const [isPending, startTransition] = useTransition()
 
-    // Dashboard state
     const [dashboardData, setDashboardData] = useState<any>(null)
+    const [journals, setJournals] = useState<any[]>([])
+    const [selectedJournal, setSelectedJournal] = useState<any>(null)
+    const [journalEntries, setJournalEntries] = useState<any>(null)
     const [isAddEntryOpen, setIsAddEntryOpen] = useState(false)
+    const [isBackfilling, setIsBackfilling] = useState(false)
 
-    // Date Filters
     const [startDate, setStartDate] = useState("")
     const [endDate, setEndDate] = useState("")
 
-    // Invoices state
-    const [invoices, setInvoices] = useState<any[]>([])
-    const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
-    const [isInvoiceDetailOpen, setIsInvoiceDetailOpen] = useState(false)
-    const [isAddLineOpen, setIsAddLineOpen] = useState(false)
-
-    // Load dashboard data
     useEffect(() => {
         loadDashboard()
-        loadInvoices()
-    }, [startDate, endDate]) // Reload when filter changes
+        loadJournals()
+    }, [startDate, endDate])
 
     async function loadDashboard() {
         const filters: any = {}
         if (startDate) filters.startDate = startDate
         if (endDate) filters.endDate = endDate
-
-        const result = await getFinanceDashboard(filters)
-        if (result.success) {
-            setDashboardData(result.data)
-        }
+        const result = await getFinanceDashboardWithJournals(filters)
+        if (result.success) setDashboardData(result.data)
     }
 
-    async function loadInvoices() {
-        const result = await getInvoices()
-        if (result.success) {
-            setInvoices(result.data || [])
-        }
+    async function loadJournals() {
+        const result = await getJournals()
+        if (result.success) setJournals(result.data || [])
     }
 
-    async function openInvoiceDetail(id: string) {
-        const result = await getInvoiceById(id)
-        if (result.success) {
-            setSelectedInvoice(result.data)
-            setIsInvoiceDetailOpen(true)
-        }
+    async function openJournal(journal: any) {
+        setSelectedJournal(journal)
+        const filters: any = {}
+        if (startDate) filters.startDate = startDate
+        if (endDate) filters.endDate = endDate
+        const result = await getJournalEntries(journal.id, filters)
+        if (result.success) setJournalEntries(result.data)
     }
 
-    const generateDashboardPDF = () => {
-        const doc = new jsPDF()
-
-        // Title
-        doc.setFontSize(20)
-        doc.text("Rapport Financier - Optimum Juridis", 14, 22)
-
-        doc.setFontSize(10)
-        doc.text(`Généré le: ${new Date().toLocaleDateString('fr-FR')}`, 14, 30)
-        if (startDate || endDate) {
-            doc.text(`Période: ${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} au ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`, 14, 36)
-        }
-
-        // Summary
-        const summaryData = [
-            ['Revenus', 'Dépenses', 'Solde Net'],
-            [
-                `${(dashboardData?.totalIncome || 0).toLocaleString('fr-FR')} FCFA`,
-                `${(dashboardData?.totalExpenses || 0).toLocaleString('fr-FR')} FCFA`,
-                `${(dashboardData?.balance || 0).toLocaleString('fr-FR')} FCFA`
-            ]
-        ]
-
-        autoTable(doc, {
-            head: [summaryData[0]],
-            body: [summaryData[1]],
-            startY: 45,
-            theme: 'grid',
-            headStyles: { fillColor: [66, 66, 66] }
-        })
-
-        // Entries
-        doc.text("Détail des mouvements", 14, (doc as any).lastAutoTable.finalY + 10)
-
-        const entriesData = dashboardData?.entries?.map((e: any) => [
-            new Date(e.date).toLocaleDateString('fr-FR'),
-            e.description,
-            e.category || '-',
-            e.type === 'INCOME' ? 'Revenu' : 'Dépense',
-            `${Number(e.amount).toLocaleString('fr-FR')} FCFA`
-        ]) || []
-
-        autoTable(doc, {
-            head: [['Date', 'Description', 'Catégorie', 'Type', 'Montant']],
-            body: entriesData,
-            startY: (doc as any).lastAutoTable.finalY + 15,
-            theme: 'striped'
-        })
-
-        doc.save('rapport_financier.pdf')
-    }
-
-    const generateInvoicePDF = (invoice: any) => {
-        if (!invoice) return
-        const doc = new jsPDF()
-
-        // Header
-        doc.setFontSize(22)
-        doc.text("FACTURE", 14, 20)
-
-        doc.setFontSize(10)
-        doc.text(`N° ${invoice.number}`, 14, 30)
-        doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString('fr-FR')}`, 14, 36)
-        doc.text(`Statut: ${invoice.status}`, 14, 42)
-
-        // Client Info
-        doc.setFontSize(12)
-        doc.text("Client:", 120, 30)
-        doc.setFontSize(10)
-        doc.text(invoice.project?.clientName || "Client Inconnu", 120, 36)
-        if (invoice.project?.clientEmail) doc.text(invoice.project?.clientEmail, 120, 42)
-        if (invoice.project?.clientPhone) doc.text(invoice.project?.clientPhone, 120, 48)
-
-        // Lines
-        const tableData = invoice.lines.map((line: any) => [
-            line.description,
-            Number(line.quantity),
-            Number(line.unitPrice).toLocaleString('fr-FR'),
-            Number(line.amount).toLocaleString('fr-FR')
-        ])
-
-        autoTable(doc, {
-            head: [['Description', 'Qté', 'Prix Unit.', 'Total']],
-            body: tableData,
-            startY: 60,
-            theme: 'grid',
-            styles: { halign: 'right' },
-            columnStyles: { 0: { halign: 'left' } }
-        })
-
-        // Totals
-        const finalY = (doc as any).lastAutoTable.finalY + 10
-        doc.text(`Sous-total: ${Number(invoice.subtotal).toLocaleString('fr-FR')} FCFA`, 140, finalY, { align: 'right' })
-        doc.text(`TVA (${Number(invoice.taxRate)}%): ${Number(invoice.tax).toLocaleString('fr-FR')} FCFA`, 140, finalY + 6, { align: 'right' })
-        doc.setFontSize(12)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Total TTC: ${Number(invoice.total).toLocaleString('fr-FR')} FCFA`, 140, finalY + 14, { align: 'right' })
-
-        doc.save(`facture_${invoice.number}.pdf`)
+    async function handleBackfill() {
+        setIsBackfilling(true)
+        await backfillJournalEntries()
+        setIsBackfilling(false)
+        loadDashboard()
+        loadJournals()
     }
 
     const maxChartValue = dashboardData?.monthlyData
@@ -234,28 +124,31 @@ export function FinanceDirectorView() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                        Finances
+                        Comptabilité
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Gestion financière et facturation automatique
+                        Espace comptable professionnel - Plan comptable OHADA
                     </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleBackfill} disabled={isBackfilling}>
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+                        Alimenter auto.
+                    </Button>
                 </div>
             </div>
 
-            {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 max-w-[90vw]">
                 <TabsList className="w-full md:w-fit items-center rounded-md bg-muted p-1 text-muted-foreground flex flex-wrap justify-start h-auto gap-2">
                     <TabsTrigger value="dashboard">Tableau de Bord</TabsTrigger>
-                    <TabsTrigger value="invoices">Facturation</TabsTrigger>
+                    <TabsTrigger value="journals">Journaux Comptables</TabsTrigger>
                 </TabsList>
 
                 {/* DASHBOARD TAB */}
                 <TabsContent value="dashboard" className="space-y-6">
-                    {/* Filters and Actions */}
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white dark:bg-slate-950 p-4 rounded-lg border shadow-sm">
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                             <div className="flex items-center gap-2">
@@ -283,14 +176,10 @@ export function FinanceDirectorView() {
                                 </Button>
                             )}
                         </div>
-                        <Button variant="outline" onClick={generateDashboardPDF}>
-                            <FileText className="h-4 w-4 mr-2" />
-                            Exporter le rapport
-                        </Button>
                     </div>
 
                     {/* Summary Cards */}
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-4">
                         <Card className="border-l-4 border-l-green-500">
                             <CardContent className="p-6">
                                 <div className="flex items-center gap-4">
@@ -336,60 +225,79 @@ export function FinanceDirectorView() {
                                 </div>
                             </CardContent>
                         </Card>
+                        <Card className="border-l-4 border-l-blue-500">
+                            <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                                        <BookCheck className="h-6 w-6 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-500">Écritures comptables</p>
+                                        <p className="text-2xl font-bold text-blue-600">
+                                            {dashboardData?.totalJournalEntries || 0}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
 
-                    {/* Monthly Chart */}
+                    {/* Journal Summary Cards */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Évolution Mensuelle</CardTitle>
-                            <CardDescription>Revenus et dépenses par mois</CardDescription>
+                            <CardTitle>Journaux Comptables OHADA</CardTitle>
+                            <CardDescription>
+                                {dashboardData?.totalJournals || 0} journaux • Plan comptable camerounais
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-3">
-                                {dashboardData?.monthlyData?.map((month: any) => (
-                                    <div key={month.month} className="space-y-1">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="w-12 text-slate-500 font-medium">{month.month}</span>
-                                            <span className="text-xs text-slate-400">
-                                                +{month.income.toLocaleString()} / -{month.expense.toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-1 h-5">
-                                            <div
-                                                className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-l"
-                                                style={{ width: maxChartValue > 0 ? `${(month.income / maxChartValue) * 45}%` : '0%' }}
-                                            />
-                                            <div
-                                                className="bg-gradient-to-r from-red-400 to-rose-500 rounded-r"
-                                                style={{ width: maxChartValue > 0 ? `${(month.expense / maxChartValue) * 45}%` : '0%' }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex gap-6 mt-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-3 w-3 rounded bg-gradient-to-r from-green-500 to-emerald-600" />
-                                    <span className="text-slate-500">Revenus</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-3 w-3 rounded bg-gradient-to-r from-red-400 to-rose-500" />
-                                    <span className="text-slate-500">Dépenses</span>
-                                </div>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {dashboardData?.journalsSummary?.map((j: any) => {
+                                    const Icon = JOURNAL_ICONS[j.type] || BookOpen
+                                    const colorMap: Record<string, string> = {
+                                        VENTES: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200',
+                                        ACHATS: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200',
+                                        BANQUE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200',
+                                        CAISSE: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200',
+                                        OD: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200',
+                                        PAIE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200',
+                                    }
+                                    return (
+                                        <button
+                                            key={j.id}
+                                            onClick={() => { setSelectedJournal(j); openJournal(j); setActiveTab('journals') }}
+                                            className={`p-4 rounded-xl border ${colorMap[j.type] || 'bg-slate-100'} text-left transition-all hover:shadow-md`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 rounded-lg bg-white/50 dark:bg-black/20">
+                                                    <Icon className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold">{j.label}</p>
+                                                    <p className="text-xs opacity-70">Code: {j.code}</p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 flex justify-between text-sm">
+                                                <span>{j.entryCount} écritures</span>
+                                                <span className="font-medium">{j.total.toLocaleString()} FCFA</span>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Entries Table */}
+                    {/* Recent Entries */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>Entrées & Sorties</CardTitle>
-                                <CardDescription>Historique des mouvements financiers</CardDescription>
+                                <CardTitle>Mouvements Financiers</CardTitle>
+                                <CardDescription>Dernières entrées et sorties</CardDescription>
                             </div>
                             <Button onClick={() => setIsAddEntryOpen(true)}>
                                 <Plus className="h-4 w-4 mr-2" />
-                                Ajouter
+                                Nouvelle écriture
                             </Button>
                         </CardHeader>
                         <CardContent>
@@ -421,23 +329,12 @@ export function FinanceDirectorView() {
                                                         {new Date(entry.date).toLocaleDateString('fr-FR')}
                                                     </p>
                                                 </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 shrink-0"
-                                                    onClick={async () => {
-                                                        await deleteFinanceEntry(entry.id)
-                                                        loadDashboard()
-                                                    }}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-                                                </Button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="text-center py-8 text-muted-foreground">
-                                        Aucune entrée enregistrée
+                                        Aucune entrée enregistrée. Utilisez "Alimenter auto." pour générer les écritures depuis les données existantes.
                                     </div>
                                 )}
                             </div>
@@ -445,442 +342,348 @@ export function FinanceDirectorView() {
                     </Card>
                 </TabsContent>
 
-                {/* INVOICES TAB */}
-                <TabsContent value="invoices" className="space-y-6">
-                    {/* Invoice Summary */}
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <Card>
-                            <CardContent className="p-4">
-                                <p className="text-sm text-slate-500">Total Factures</p>
-                                <p className="text-2xl font-bold">{invoices.length}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4">
-                                <p className="text-sm text-slate-500">Brouillons</p>
-                                <p className="text-2xl font-bold text-slate-600">
-                                    {invoices.filter(i => i.status === 'DRAFT').length}
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4">
-                                <p className="text-sm text-slate-500">Envoyées</p>
-                                <p className="text-2xl font-bold text-blue-600">
-                                    {invoices.filter(i => i.status === 'SENT').length}
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4">
-                                <p className="text-sm text-slate-500">Payées</p>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {invoices.filter(i => i.status === 'PAID').length}
-                                </p>
-                            </CardContent>
-                        </Card>
+                {/* JOURNALS TAB */}
+                <TabsContent value="journals" className="space-y-6">
+                    {/* Journal Selector */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        {journals.map((j: any) => {
+                            const Icon = JOURNAL_ICONS[j.type] || BookOpen
+                            const isSelected = selectedJournal?.id === j.id
+                            const colorMap: Record<string, string> = {
+                                VENTES: isSelected ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950' : 'hover:bg-green-50 dark:hover:bg-green-950',
+                                ACHATS: isSelected ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950' : 'hover:bg-orange-50 dark:hover:bg-orange-950',
+                                BANQUE: isSelected ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : 'hover:bg-blue-50 dark:hover:bg-blue-950',
+                                CAISSE: isSelected ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950' : 'hover:bg-purple-50 dark:hover:bg-purple-950',
+                                OD: isSelected ? 'ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900' : 'hover:bg-slate-50 dark:hover:bg-slate-900',
+                                PAIE: isSelected ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950' : 'hover:bg-amber-50 dark:hover:bg-amber-950',
+                            }
+                            return (
+                                <button
+                                    key={j.id}
+                                    onClick={() => openJournal(j)}
+                                    className={`p-3 rounded-xl border text-left transition-all ${colorMap[j.type] || 'hover:bg-muted'}`}
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Icon className="h-4 w-4" />
+                                        <span className="font-semibold text-sm">{j.code}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{j.label}</p>
+                                    <div className="mt-2 flex justify-between text-xs">
+                                        <span>{j._count?.entries || 0} écritures</span>
+                                        <span className="font-medium">{(j.totalDebit || 0).toLocaleString()} FCFA</span>
+                                    </div>
+                                </button>
+                            )
+                        })}
                     </div>
 
-                    {/* Search and Filter */}
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                    <Input placeholder="Rechercher une facture..." className="pl-10" />
+                    {/* Journal Detail */}
+                    {selectedJournal && journalEntries && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        {(JOURNAL_ICONS[selectedJournal.type] || BookOpen)({ className: "h-5 w-5" })}
+                                        {selectedJournal.label}
+                                        <Badge variant="outline" className="ml-2">{selectedJournal.code}</Badge>
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Solde: {journalEntries.balance.toLocaleString()} FCFA •
+                                        Débit: {journalEntries.totalDebit.toLocaleString()} •
+                                        Crédit: {journalEntries.totalCredit.toLocaleString()}
+                                    </CardDescription>
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm">
-                                        <Filter className="h-4 w-4 mr-1" />
-                                        Statut
-                                    </Button>
+                                <Button onClick={() => setIsAddEntryOpen(true)} size="sm">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Ajouter
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full min-w-[800px]">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                                                <th className="text-left p-3 font-medium text-slate-500 text-sm">Date</th>
+                                                <th className="text-left p-3 font-medium text-slate-500 text-sm">Pièce</th>
+                                                <th className="text-left p-3 font-medium text-slate-500 text-sm">Compte</th>
+                                                <th className="text-left p-3 font-medium text-slate-500 text-sm">Libellé</th>
+                                                <th className="text-right p-3 font-medium text-slate-500 text-sm">Débit</th>
+                                                <th className="text-right p-3 font-medium text-slate-500 text-sm">Crédit</th>
+                                                <th className="text-left p-3 font-medium text-slate-500 text-sm">Source</th>
+                                                <th className="w-10"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {journalEntries.entries?.map((entry: any) => (
+                                                <tr key={entry.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                    <td className="p-3 text-sm">
+                                                        {new Date(entry.date).toLocaleDateString('fr-FR')}
+                                                    </td>
+                                                    <td className="p-3 text-sm text-muted-foreground">
+                                                        {entry.pieceRef || '-'}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <span className="font-mono font-medium">{entry.accountNum}</span>
+                                                        <p className="text-xs text-muted-foreground">{entry.accountName}</p>
+                                                    </td>
+                                                    <td className="p-3 text-sm max-w-[200px] truncate">
+                                                        {entry.description}
+                                                    </td>
+                                                    <td className="p-3 text-right font-mono text-sm">
+                                                        {Number(entry.debit) > 0 ? `${Number(entry.debit).toLocaleString()} FCFA` : '-'}
+                                                    </td>
+                                                    <td className="p-3 text-right font-mono text-sm">
+                                                        {Number(entry.credit) > 0 ? `${Number(entry.credit).toLocaleString()} FCFA` : '-'}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {entry.sourceType === 'MANUAL' ? 'Manuelle' :
+                                                             entry.sourceType === 'INVOICE' ? 'Facture' :
+                                                             entry.sourceType === 'FINANCE_ENTRY' ? 'Finances' : 'Auto'}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {entry.sourceType === 'MANUAL' && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7"
+                                                                onClick={async () => {
+                                                                    await deleteAccountingEntry(entry.id)
+                                                                    openJournal(selectedJournal)
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-3 w-3" />
+                                                            </Button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {(!journalEntries.entries || journalEntries.entries.length === 0) && (
+                                                <tr>
+                                                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                                                        Aucune écriture dans ce journal. Cliquez sur "Alimenter auto." pour générer les écritures depuis les données existantes.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr className="border-t-2 border-slate-200 dark:border-slate-700 font-bold">
+                                                <td colSpan={4} className="p-3 text-right">Totaux</td>
+                                                <td className="p-3 text-right">{journalEntries.totalDebit.toLocaleString()} FCFA</td>
+                                                <td className="p-3 text-right">{journalEntries.totalCredit.toLocaleString()} FCFA</td>
+                                                <td colSpan={2}></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
-                    {/* Invoices List */}
-                    <Card>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full min-w-[800px]">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-800">
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Facture</th>
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Projet / Client</th>
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Montant</th>
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Statut</th>
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Lignes</th>
-                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {invoices.map(invoice => (
-                                            <tr key={invoice.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                <td className="p-4">
-                                                    <p className="font-medium">{invoice.number}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {new Date(invoice.createdAt).toLocaleDateString('fr-FR')}
-                                                    </p>
-                                                </td>
-                                                <td className="p-4">
-                                                    <p className="font-medium">{invoice.project?.name || '-'}</p>
-                                                    <p className="text-sm text-muted-foreground">{invoice.project?.clientName || '-'}</p>
-                                                </td>
-                                                <td className="p-4">
-                                                    <p className="font-bold">{Number(invoice.total).toLocaleString()} FCFA</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        TVA: {Number(invoice.tax).toLocaleString()} FCFA
-                                                    </p>
-                                                </td>
-                                                <td className="p-4">
-                                                    <Badge variant={
-                                                        invoice.status === 'PAID' ? 'default' :
-                                                            invoice.status === 'SENT' ? 'secondary' :
-                                                                invoice.status === 'OVERDUE' ? 'destructive' :
-                                                                    'outline'
-                                                    }>
-                                                        {invoice.status === 'DRAFT' && 'Brouillon'}
-                                                        {invoice.status === 'SENT' && 'Envoyée'}
-                                                        {invoice.status === 'PAID' && 'Payée'}
-                                                        {invoice.status === 'OVERDUE' && 'En retard'}
-                                                        {invoice.status === 'CANCELLED' && 'Annulée'}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    <span className="font-medium">{invoice._count?.lines || 0}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onClick={() => openInvoiceDetail(invoice.id)}
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <MoreVertical className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                {invoice.status === 'DRAFT' && (
-                                                                    <DropdownMenuItem onClick={async () => {
-                                                                        await validateInvoice(invoice.id)
-                                                                        loadInvoices()
-                                                                    }}>
-                                                                        <Send className="h-4 w-4 mr-2" />
-                                                                        Valider & Envoyer
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                {invoice.status === 'SENT' && (
-                                                                    <DropdownMenuItem onClick={async () => {
-                                                                        await markInvoiceAsPaid(invoice.id)
-                                                                        loadInvoices()
-                                                                        loadDashboard()
-                                                                    }}>
-                                                                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                                                                        Marquer Payée
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                <DropdownMenuItem onClick={() => generateInvoicePDF(invoice)}>
-                                                                    <Download className="h-4 w-4 mr-2" />
-                                                                    Télécharger PDF
-                                                                </DropdownMenuItem>
-                                                                {invoice.status === 'DRAFT' && (
-                                                                    <DropdownMenuItem
-                                                                        className="text-red-600"
-                                                                        onClick={async () => {
-                                                                            await deleteInvoice(invoice.id)
-                                                                            loadInvoices()
-                                                                        }}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                                        Supprimer
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {invoices.length === 0 && (
-                                            <tr>
-                                                <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                    Aucune facture. Les factures sont créées automatiquement lors de la complétion des tâches.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {!selectedJournal && (
+                        <Card>
+                            <CardContent className="p-12 text-center">
+                                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                                <h3 className="text-lg font-semibold mb-2">Sélectionnez un journal</h3>
+                                <p className="text-muted-foreground">
+                                    Choisissez un journal comptable ci-dessus pour voir ses écritures.
+                                    Les journaux suivent le plan comptable OHADA (Organisation pour l'Harmonisation du Droit des Affaires en Afrique).
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </TabsContent>
             </Tabs>
 
-            {/* Add Entry Modal */}
-            <AddEntryModal
+            {/* Add Accounting Entry Modal */}
+            <AddJournalEntryModal
                 open={isAddEntryOpen}
                 onOpenChange={setIsAddEntryOpen}
+                journals={journals}
+                preselectedJournalId={selectedJournal?.id}
                 onSuccess={() => {
-                    loadDashboard()
                     setIsAddEntryOpen(false)
+                    loadDashboard()
+                    loadJournals()
+                    if (selectedJournal) openJournal(selectedJournal)
                 }}
-            />
-
-            {/* Invoice Detail Modal */}
-            <InvoiceDetailModal
-                invoice={selectedInvoice}
-                open={isInvoiceDetailOpen}
-                onOpenChange={setIsInvoiceDetailOpen}
-                onUpdate={() => {
-                    loadInvoices()
-                    if (selectedInvoice) openInvoiceDetail(selectedInvoice.id)
-                }}
-                onDownload={() => generateInvoicePDF(selectedInvoice)}
             />
         </div>
     )
 }
 
-// Add Entry Modal Component
-function AddEntryModal({ open, onOpenChange, onSuccess }: {
+function AddJournalEntryModal({ open, onOpenChange, journals, preselectedJournalId, onSuccess }: {
     open: boolean
     onOpenChange: (open: boolean) => void
+    journals: any[]
+    preselectedJournalId?: string
     onSuccess: () => void
 }) {
     const [isPending, startTransition] = useTransition()
-    const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE')
-    const [amount, setAmount] = useState('')
+    const [journalId, setJournalId] = useState(preselectedJournalId || '')
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+    const [pieceRef, setPieceRef] = useState('')
     const [description, setDescription] = useState('')
-    const [category, setCategory] = useState('')
+    const [accountNum, setAccountNum] = useState('')
+    const [accountName, setAccountName] = useState('')
+    const [debit, setDebit] = useState('')
+    const [credit, setCredit] = useState('')
+    const [accountChart, setAccountChart] = useState<any[]>([])
+
+    useEffect(() => {
+        getAccountChart().then((r) => {
+            if (r.success) setAccountChart(r.data || [])
+        })
+    }, [])
+
+    useEffect(() => {
+        setJournalId(preselectedJournalId || '')
+    }, [preselectedJournalId])
+
+    const handleAccountSelect = (num: string) => {
+        setAccountNum(num)
+        const acct = accountChart.find((a) => a.num === num)
+        if (acct) setAccountName(acct.name)
+    }
 
     const handleSubmit = () => {
         startTransition(async () => {
-            const result = await createFinanceEntry({
-                type,
-                amount: parseFloat(amount) || 0,
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                await queueOperation({
+                    action: 'createManualAccountingEntry',
+                    endpoint: '/api/offline',
+                    payload: {
+                        journalId,
+                        date,
+                        pieceRef,
+                        description,
+                        accountNum,
+                        accountName,
+                        debit: parseFloat(debit) || 0,
+                        credit: parseFloat(credit) || 0,
+                    },
+                })
+                setPieceRef('')
+                setDescription('')
+                setAccountNum('')
+                setAccountName('')
+                setDebit('')
+                setCredit('')
+                onSuccess()
+                return
+            }
+
+            const result = await createManualAccountingEntry({
+                journalId,
+                date,
+                pieceRef,
                 description,
-                category
+                accountNum,
+                accountName,
+                debit: parseFloat(debit) || 0,
+                credit: parseFloat(credit) || 0,
             })
             if (result.success) {
-                setAmount('')
+                setPieceRef('')
                 setDescription('')
-                setCategory('')
+                setAccountNum('')
+                setAccountName('')
+                setDebit('')
+                setCredit('')
                 onSuccess()
             }
         })
     }
 
+    const selectedJournal = journals.find((j) => j.id === journalId)
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Ajouter une Entrée Financière</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-primary" />
+                        Nouvelle écriture comptable
+                    </DialogTitle>
                     <DialogDescription>
-                        Enregistrez un revenu ou une dépense
+                        Enregistrer une écriture dans un journal comptable OHADA
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label>Type</Label>
-                        <Select value={type} onValueChange={(v) => setType(v as any)}>
+                        <Label>Journal comptable</Label>
+                        <Select value={journalId} onValueChange={setJournalId}>
                             <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Sélectionner un journal" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="INCOME">Entrée (Revenu)</SelectItem>
-                                <SelectItem value="EXPENSE">Sortie (Dépense)</SelectItem>
+                                {journals.map((j) => {
+                                    const Icon = JOURNAL_ICONS[j.type] || BookOpen
+                                    return (
+                                        <SelectItem key={j.id} value={j.id}>
+                                            <span className="flex items-center gap-2">
+                                                <Icon className="h-4 w-4" />
+                                                {j.label} ({j.code})
+                                            </span>
+                                        </SelectItem>
+                                    )
+                                })}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Montant (FCFA)</Label>
-                        <Input
-                            type="number"
-                            placeholder="0"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                        />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Pièce comptable</Label>
+                            <Input placeholder="N° facture/reçu" value={pieceRef} onChange={(e) => setPieceRef(e.target.value)} />
+                        </div>
                     </div>
+
                     <div className="space-y-2">
-                        <Label>Description</Label>
-                        <Input
-                            placeholder="Description du mouvement"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
+                        <Label>Compte comptable OHADA</Label>
+                        <Select value={accountNum} onValueChange={handleAccountSelect}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Choisir un compte" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {accountChart.map((a) => (
+                                    <SelectItem key={a.num} value={a.num}>
+                                        {a.num} - {a.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+
                     <div className="space-y-2">
-                        <Label>Catégorie (optionnel)</Label>
-                        <Input
-                            placeholder="Ex: Fournitures, Transport..."
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        />
+                        <Label>Libellé</Label>
+                        <Input placeholder="Description de l'écriture" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Débit (FCFA)</Label>
+                            <Input type="number" placeholder="0" value={debit} onChange={(e) => setDebit(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Crédit (FCFA)</Label>
+                            <Input type="number" placeholder="0" value={credit} onChange={(e) => setCredit(e.target.value)} />
+                        </div>
                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                         Annuler
                     </Button>
-                    <Button onClick={handleSubmit} disabled={isPending || !amount || !description}>
+                    <Button onClick={handleSubmit} disabled={isPending || !journalId || !description || !accountNum || (!debit && !credit)}>
                         {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         Enregistrer
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
-// Invoice Detail Modal Component
-function InvoiceDetailModal({ invoice, open, onOpenChange, onUpdate, onDownload }: {
-    invoice: any
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onUpdate: () => void
-    onDownload: () => void
-}) {
-    if (!invoice) return null
-
-    const isEditable = !invoice.validated
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3">
-                        <Receipt className="h-5 w-5 text-primary" />
-                        {invoice.number}
-                        <Badge variant={invoice.validated ? 'default' : 'outline'}>
-                            {invoice.validated ? 'Validée' : 'Brouillon'}
-                        </Badge>
-                    </DialogTitle>
-                    <DialogDescription>
-                        {invoice.project?.name || 'Facture générale'} - {invoice.project?.clientName || 'Client'}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                    {/* Client Info */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Client</p>
-                            <p className="font-medium">{invoice.project?.clientName || '-'}</p>
-                            <p className="text-sm">{invoice.project?.clientEmail || '-'}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Date d'émission</p>
-                            <p className="font-medium">{new Date(invoice.createdAt).toLocaleDateString('fr-FR')}</p>
-                            {invoice.dueDate && (
-                                <>
-                                    <p className="text-sm text-muted-foreground mt-2">Échéance</p>
-                                    <p className="font-medium">{new Date(invoice.dueDate).toLocaleDateString('fr-FR')}</p>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Invoice Lines */}
-                    <div>
-                        <h3 className="font-semibold mb-3">Lignes de facture</h3>
-                        <div className="border rounded-lg overflow-x-auto">
-                            <table className="w-full min-w-[500px]">
-                                <thead className="bg-muted/50">
-                                    <tr>
-                                        <th className="text-left p-3 text-sm font-medium">Description</th>
-                                        <th className="text-right p-3 text-sm font-medium w-24">Qté</th>
-                                        <th className="text-right p-3 text-sm font-medium w-32">Prix Unit.</th>
-                                        <th className="text-right p-3 text-sm font-medium w-32">Montant</th>
-                                        {isEditable && <th className="w-10"></th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {invoice.lines?.map((line: any) => (
-                                        <tr key={line.id} className="border-t">
-                                            <td className="p-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {line.type}
-                                                    </Badge>
-                                                    <span>{line.description}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-3 text-right">{Number(line.quantity)}</td>
-                                            <td className="p-3 text-right">{Number(line.unitPrice).toLocaleString()}</td>
-                                            <td className="p-3 text-right font-medium">{Number(line.amount).toLocaleString()}</td>
-                                            {isEditable && (
-                                                <td className="p-3">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7"
-                                                        onClick={async () => {
-                                                            await deleteInvoiceLine(line.id)
-                                                            onUpdate()
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))}
-                                    {invoice.lines?.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="p-4 text-center text-muted-foreground">
-                                                Aucune ligne
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Totals */}
-                    <div className="flex justify-end">
-                        <div className="w-64 space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Sous-total HT</span>
-                                <span>{Number(invoice.subtotal).toLocaleString()} FCFA</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">TVA ({Number(invoice.taxRate)}%)</span>
-                                <span>{Number(invoice.tax).toLocaleString()} FCFA</span>
-                            </div>
-                            <div className="flex justify-between border-t pt-2 font-bold text-lg">
-                                <span>Total TTC</span>
-                                <span className="text-primary">{Number(invoice.total).toLocaleString()} FCFA</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Fermer
-                    </Button>
-                    <Button variant="secondary" onClick={onDownload}>
-                        <Download className="h-4 w-4 mr-2" />
-                        PDF
-                    </Button>
-                    {isEditable && invoice.lines?.length > 0 && (
-                        <Button onClick={async () => {
-                            await validateInvoice(invoice.id)
-                            onUpdate()
-                            onOpenChange(false)
-                        }}>
-                            <Send className="h-4 w-4 mr-2" />
-                            Valider & Envoyer
-                        </Button>
-                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

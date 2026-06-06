@@ -3,6 +3,7 @@
 import { prisma } from "@/db/prisma"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { autoFeedFromFinanceEntry } from "./accounting"
 
 // Get finance dashboard data
 export async function getFinanceDashboard(filters?: { startDate?: string, endDate?: string }) {
@@ -154,7 +155,7 @@ export async function createFinanceEntry(data: {
     }
 
     try {
-        await prisma.financeEntry.create({
+        const entry = await prisma.financeEntry.create({
             data: {
                 type: data.type,
                 amount: data.amount,
@@ -167,6 +168,9 @@ export async function createFinanceEntry(data: {
                 createdById: (session.user as any).id
             }
         })
+
+        // Auto-feed accounting journals
+        await autoFeedFromFinanceEntry(entry.id)
 
         revalidatePath("/finance")
         return { success: true }

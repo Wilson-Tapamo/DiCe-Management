@@ -1,6 +1,7 @@
 import React from "react";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { OfflineBanner } from "@/components/offline/offline-banner";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -20,6 +21,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <Topbar user={user} />
                 <main className="flex-1 overflow-auto p-6">{children}</main>
             </div>
+            <OfflineBanner />
         </div>
     );
 }

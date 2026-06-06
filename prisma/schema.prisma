@@ -65,6 +65,15 @@ enum FinanceEntryType {
   EXPENSE
 }
 
+enum JournalType {
+  VENTES
+  ACHATS
+  BANQUE
+  CAISSE
+  OD
+  PAIE
+}
+
 enum InvoiceLineType {
   HOURS
   PERDIEM
@@ -105,6 +114,7 @@ model User {
   financeEntries FinanceEntry[]
   notifications Notification[]
   uploadedAttachments TaskAttachment[] @relation("UserUploadedAttachments")
+  accountEntries AccountEntry[]
   
   consultingProjects Project[] @relation("ProjectConsultants")
 }
@@ -309,6 +319,36 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model AccountingJournal {
+  id        String        @id @default(cuid())
+  type      JournalType   @unique
+  label     String
+  code      String        // VNA, ACH, BQ, CS, OD, PA
+  entries   AccountEntry[]
+  createdAt DateTime      @default(now())
+}
+
+model AccountEntry {
+  id          String       @id @default(cuid())
+  journalId   String
+  journal     AccountingJournal @relation(fields: [journalId], references: [id])
+  date        DateTime     @default(now())
+  pieceRef    String?      // Document reference (invoice number, etc.)
+  description String
+  accountNum  String       // OHADA account number (e.g. 512, 701)
+  accountName String       // OHADA account label
+  debit       Decimal      @default(0) @db.Decimal(12, 2)
+  credit      Decimal      @default(0) @db.Decimal(12, 2)
+  sourceType  String?      // INVOICE, FINANCE_ENTRY, TASK, MANUAL
+  sourceId    String?
+  createdById String?
+  createdBy   User?        @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+
+  @@index([journalId])
+  @@index([date])
 }
 
 model TaskAttachment {

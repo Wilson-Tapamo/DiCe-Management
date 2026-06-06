@@ -59,6 +59,12 @@ const navItems: NavItem[] = [
         roles: ["DIRECTOR", "CONSULTANT"],
     },
     {
+        title: "Finances",
+        href: "/finance",
+        icon: TrendingUp,
+        roles: ["DIRECTOR"],
+    },
+    {
         title: "Personnel",
         href: "/consultants",
         icon: Users,

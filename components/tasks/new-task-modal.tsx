@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { createTask, updateTask, addTaskAttachment, deleteTaskAttachment } from "@/app/actions/tasks"
+import { queueOperation } from "@/lib/offline/sync"
 import { TaskSchema, TaskInput } from "@/lib/schemas"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
@@ -101,6 +102,20 @@ export function NewTaskModal({ open, onOpenChange, projects, consultants, task }
                 const formattedData = {
                     ...data,
                     initialSubtasks: !task ? subtasks.filter(s => s.value.trim().length > 0).map(s => s.value) : undefined
+                }
+
+                if (typeof navigator !== 'undefined' && !navigator.onLine && !task) {
+                    await queueOperation({
+                        action: 'createTask',
+                        endpoint: '/api/offline',
+                        payload: formattedData,
+                    })
+                    onOpenChange(false)
+                    form.reset()
+                    setSelectedConsultants([])
+                    setSubtasks([])
+                    setUploadedFiles([])
+                    return
                 }
 
                 let result;

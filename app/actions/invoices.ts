@@ -4,6 +4,7 @@ import { prisma } from "@/db/prisma"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { createNotification } from "./notifications"
+import { autoFeedFromInvoice } from "./accounting"
 
 // Generate invoice number
 function generateInvoiceNumber() {
@@ -324,6 +325,9 @@ export async function markInvoiceAsPaid(id: string) {
                 createdById: (session.user as any).id
             }
         })
+
+        // Auto-feed accounting journals
+        await autoFeedFromInvoice(id)
 
         revalidatePath("/finance")
         return { success: true }
