@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Image from 'next/image'
 import {
     ChevronRight,
     Download,
@@ -56,6 +57,14 @@ function getFileIcon(name: string, mimeType?: string) {
     }
     if (/\.(pdf|docx?|txt|xlsx?)$/i.test(lower)) return FileText
     return File
+}
+
+function isImageFile(name: string, mimeType?: string) {
+    const lower = name.toLowerCase()
+    return (
+        mimeType?.startsWith('image/') ||
+        /\.(png|jpe?g|gif|webp)$/i.test(lower)
+    )
 }
 
 function downloadFile(doc: DocumentItem) {
@@ -460,30 +469,42 @@ export function DocumentsView({ initialDocuments, projects }: DocumentsViewProps
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {filteredDocuments.map((doc) => {
                                 const Icon = getFileIcon(doc.fileName, doc.mimeType)
+                                const isImage = isImageFile(doc.fileName, doc.mimeType)
                                 return (
-                                    <div
-                                        key={doc.id}
-                                        className="group flex flex-col items-center p-4 rounded-xl bg-white/90 border border-slate-200/50 shadow-sm hover:shadow-md hover:border-blue-200/60 transition-all dark:bg-slate-800/80 dark:border-slate-700"
-                                    >
-                                        <div className="h-14 w-14 flex items-center justify-center rounded-lg bg-gradient-to-b from-slate-50 to-slate-100 mb-2 dark:from-slate-700 dark:to-slate-800">
-                                            <Icon className="h-8 w-8 text-blue-500" />
+                                    <div key={doc.id} className="group flex flex-col items-center rounded-xl bg-white/90 border border-slate-200/50 shadow-sm hover:shadow-md hover:border-blue-200/60 transition-all dark:bg-slate-800/80 dark:border-slate-700 overflow-hidden">
+                                        {isImage ? (
+                                            <div className="relative w-full aspect-square bg-slate-100 dark:bg-slate-700">
+                                                <Image
+                                                    src={doc.fileUrl}
+                                                    alt={doc.fileName}
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="h-14 w-full flex items-center justify-center rounded-t-lg bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800">
+                                                <Icon className="h-8 w-8 text-blue-500" />
+                                            </div>
+                                        )}
+                                        <div className="w-full p-3 flex flex-col flex-1">
+                                            <p className="text-xs font-medium text-center line-clamp-2 w-full">
+                                                {doc.fileName}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 text-center">
+                                                {formatFileSize(doc.fileSize)}
+                                            </p>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="secondary"
+                                                className="mt-2 h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={() => downloadFile(doc)}
+                                            >
+                                                <Download className="h-3 w-3 mr-1" />
+                                                Télécharger
+                                            </Button>
                                         </div>
-                                        <p className="text-xs font-medium text-center line-clamp-2 w-full px-1">
-                                            {doc.fileName}
-                                        </p>
-                                        <p className="text-[10px] text-slate-500 mt-0.5">
-                                            {formatFileSize(doc.fileSize)}
-                                        </p>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="secondary"
-                                            className="mt-2 h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => downloadFile(doc)}
-                                        >
-                                            <Download className="h-3 w-3 mr-1" />
-                                            Télécharger
-                                        </Button>
                                     </div>
                                 )
                             })}

@@ -14,6 +14,7 @@ import { Calendar, CheckCircle2, Clock, Mail, MoreVertical, Paperclip, Phone, Us
 import { getInitials } from "@/lib/utils"
 import { ProjectActions } from "./project-actions"
 import { getProjectDetails } from "@/app/actions/projects"
+import { FileAttachmentItem } from "@/components/tasks/file-attachment-item"
 
 interface ViewProjectModalProps {
     project: any
@@ -158,14 +159,29 @@ export function ViewProjectModal({ project: initialProject, open, onOpenChange, 
                             </TabsContent>
 
                             <TabsContent value="files" className="mt-0">
-                                <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/20">
-                                    <Paperclip className="h-10 w-10 text-muted-foreground/50 mb-3" />
-                                    <h3 className="font-semibold text-lg">Aucun fichier</h3>
-                                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                                        Déposez ici les documents contractuels, rapports et annexes.
-                                    </p>
-                                    <Button variant="outline" className="mt-4">Uploader</Button>
-                                </div>
+                                {details?.attachments && details.attachments.length > 0 ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {details.attachments.map((attachment: any, index: number) => (
+                                            <FileAttachmentItem
+                                                key={index}
+                                                file={{ url: attachment.fileUrl, name: attachment.fileName, size: attachment.fileSize }}
+                                                formatFileSize={(bytes: number) => {
+                                                    if (bytes < 1024) return bytes + ' o'
+                                                    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' Ko'
+                                                    return (bytes / 1048576).toFixed(1) + ' Mo'
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/20">
+                                        <Paperclip className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                                        <h3 className="font-semibold text-lg">Aucun fichier</h3>
+                                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                                            Déposez ici les documents contractuels, rapports et annexes.
+                                        </p>
+                                    </div>
+                                )}
                             </TabsContent>
 
                             <TabsContent value="activity" className="mt-0">
