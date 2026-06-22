@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
     ChevronLeft,
     ChevronRight,
@@ -35,7 +35,7 @@ export function TaskGanttView({ tasks, onViewTask }: TaskGanttViewProps) {
         return startOfDay(d)
     })
     const [zoom, setZoom] = useState(32) // px per day
-    const daysShown = Math.floor(900 / zoom) // adapt to typical container width
+    const daysShown = Math.floor(900 / zoom)
     const days = Array.from({ length: Math.max(daysShown, 28) }, (_, i) => addDays(startDate, i))
 
     const prevWeek = () => setStartDate(d => subWeeks(d, 1))
@@ -139,33 +139,33 @@ export function TaskGanttView({ tasks, onViewTask }: TaskGanttViewProps) {
             {ganttTasks.length > 0 && (
                 <div className="border rounded-xl overflow-hidden bg-card shadow-sm">
                     <div className="flex overflow-x-auto">
-                        {/* Left: task list */}
-                        <div className="flex-shrink-0 w-56 border-r bg-muted/10 z-10 shadow-sm">
+                        {/* Left: task list - responsive width */}
+                        <div className="flex-shrink-0 w-32 md:w-56 border-r bg-muted/10 z-10 shadow-sm">
                             {/* Header */}
-                            <div className="h-14 flex items-center px-4 border-b bg-muted/20">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tâche</span>
+                            <div className="h-14 flex items-center px-2 md:px-4 border-b bg-muted/20">
+                                <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tâche</span>
                             </div>
                             {projects.map((group, gi) => (
                                 <div key={gi}>
                                     {/* Project group header */}
-                                    <div className="px-3 py-2 bg-muted/30 border-b">
-                                        <p className="text-xs font-bold text-muted-foreground truncate">{group.name}</p>
+                                    <div className="px-2 md:px-3 py-1.5 md:py-2 bg-muted/30 border-b">
+                                        <p className="text-[10px] md:text-xs font-bold text-muted-foreground truncate">{group.name}</p>
                                     </div>
                                     {group.tasks.map((task, ti) => (
                                         <div
                                             key={task.id}
                                             style={{ height: rowH }}
-                                            className="flex items-center px-3 border-b cursor-pointer hover:bg-primary/5 transition-colors group"
+                                            className="flex items-center px-2 md:px-3 border-b cursor-pointer hover:bg-primary/5 transition-colors group"
                                             onClick={() => onViewTask(task)}
                                         >
                                             <div className={cn(
-                                                "w-2 h-2 rounded-full flex-shrink-0 mr-2",
+                                                "w-1.5 md:w-2 h-1.5 md:h-2 rounded-full flex-shrink-0 mr-1.5 md:mr-2",
                                                 STATUS_COLORS[task.status]?.bar || "bg-slate-400"
                                             )} />
                                             <div className="min-w-0">
-                                                <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">{task.title}</p>
+                                                <p className="text-[10px] md:text-xs font-medium truncate group-hover:text-primary transition-colors">{task.title}</p>
                                                 {task.assignees?.length > 0 && (
-                                                    <p className="text-[10px] text-muted-foreground truncate">{task.assignees[0].name}</p>
+                                                    <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">{task.assignees[0].name}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -176,32 +176,32 @@ export function TaskGanttView({ tasks, onViewTask }: TaskGanttViewProps) {
 
                         {/* Right: timeline */}
                         <div className="flex-1 overflow-x-auto">
-                            {/* Timeline header */}
-                            <div className="h-14 border-b bg-muted/20 flex-shrink-0 sticky top-0 z-10">
+                            {/* Timeline header - responsive height */}
+                            <div className="h-12 md:h-14 border-b bg-muted/20 flex-shrink-0 sticky top-0 z-10">
                                 <div className="flex" style={{ width: totalWidth }}>
                                     {days.map((day, i) => (
                                         <div
                                             key={i}
                                             style={{ width: zoom, flexShrink: 0 }}
                                             className={cn(
-                                                "flex flex-col items-center justify-center border-r text-center py-1",
+                                                "flex flex-col items-center justify-center border-r text-center py-0.5 md:py-1",
                                                 isToday(day) && "bg-primary/10",
                                                 day.getDay() === 0 || day.getDay() === 6 ? "bg-muted/40" : ""
                                             )}
                                         >
                                             {(i === 0 || day.getDate() === 1 || (zoom >= 28 && i % 7 === 0)) && (
-                                                <span className="text-[9px] font-semibold text-muted-foreground uppercase leading-none">
+                                                <span className="text-[8px] md:text-[9px] font-semibold text-muted-foreground uppercase leading-none">
                                                     {format(day, 'MMM', { locale: fr })}
                                                 </span>
                                             )}
                                             <span className={cn(
-                                                "text-[10px] font-medium leading-none mt-0.5",
+                                                "text-[9px] md:text-[10px] font-medium leading-none mt-0.5",
                                                 isToday(day) ? "text-primary font-bold" : "text-muted-foreground"
                                             )}>
                                                 {zoom >= 24 ? format(day, 'd') : (i % 3 === 0 ? format(day, 'd') : '')}
                                             </span>
                                             {zoom >= 36 && (
-                                                <span className="text-[8px] text-muted-foreground/60 leading-none">
+                                                <span className="text-[7px] md:text-[8px] text-muted-foreground/60 leading-none">
                                                     {format(day, 'EEE', { locale: fr })}
                                                 </span>
                                             )}
@@ -240,7 +240,7 @@ export function TaskGanttView({ tasks, onViewTask }: TaskGanttViewProps) {
                                     let rows: any[] = []
                                     // Group header spacer
                                     rows.push(
-                                        <div key={`gh-${gi}`} style={{ height: 29 }} className="border-b bg-muted/10" />
+                                        <div key={`gh-${gi}`} style={{ height: 24 }} className="border-b bg-muted/10" />
                                     )
                                     group.tasks.forEach((task: any, ti: number) => {
                                         const bar = getBarStyle(task)

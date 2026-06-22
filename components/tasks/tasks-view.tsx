@@ -9,7 +9,8 @@ import {
     Search,
     Calendar as CalendarIcon,
     BarChart2,
-    Filter
+    Filter,
+    ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -266,89 +267,154 @@ export function TasksView({ initialTasks, projects, consultants, currentUser }: 
                 </div>
             )}
 
-            {/* List View Placeholder */}
+            {/* List View - Responsive */}
             {viewMode === 'list' && (
-                <Card>
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-slate-100 dark:border-slate-800">
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm">Tâche</th>
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm">Projet</th>
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm">Priorité</th>
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm">Assigné à</th>
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm">Statut</th>
-                                        <th className="text-left p-4 font-medium text-slate-500 text-sm w-12"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {initialTasks.map(task => (
-                                        <tr key={task.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => handleViewTask(task)}>
-                                            <td className="p-4">
-                                                <div className="font-medium text-sm">{task.title}</div>
-                                                {task.dueDate && (
-                                                    <div className="text-xs text-muted-foreground flex items-center mt-1">
-                                                        <CalendarIcon className="h-3 w-3 mr-1" />
-                                                        {new Date(task.dueDate).toLocaleDateString('fr-FR')}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
-                                                {task.project?.name}
-                                            </td>
-                                            <td className="p-4">
-                                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${task.priority >= 3 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                        task.priority === 2 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                                                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                                    }`}>
-                                                    {task.priority >= 3 ? 'Haute' : task.priority === 2 ? 'Moyenne' : 'Basse'}
-                                                </span>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex -space-x-2">
-                                                    {task.assignees?.map((assignee: any) => (
-                                                        <div key={assignee.id} className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white dark:border-slate-950 text-[10px] font-medium text-indigo-700" title={assignee.name}>
-                                                            {assignee.name.charAt(0)}
+                <>
+                    {/* Desktop: Table */}
+                    <Card className="hidden md:block">
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 dark:border-slate-800">
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Tâche</th>
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Projet</th>
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Priorité</th>
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Assigné à</th>
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm">Statut</th>
+                                            <th className="text-left p-4 font-medium text-slate-500 text-sm w-12"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {initialTasks.map(task => (
+                                            <tr key={task.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => handleViewTask(task)}>
+                                                <td className="p-4">
+                                                    <div className="font-medium text-sm">{task.title}</div>
+                                                    {task.dueDate && (
+                                                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                                                            <CalendarIcon className="h-3 w-3 mr-1" />
+                                                            {new Date(task.dueDate).toLocaleDateString('fr-FR')}
                                                         </div>
-                                                    ))}
-                                                    {(!task.assignees || task.assignees.length === 0) && <span className="text-xs text-muted-foreground">-</span>}
+                                                    )}
+                                                </td>
+                                                <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
+                                                    {task.project?.name}
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${task.priority >= 3 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                            task.priority === 2 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        }`}>
+                                                        {task.priority >= 3 ? 'Haute' : task.priority === 2 ? 'Moyenne' : 'Basse'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex -space-x-2">
+                                                        {task.assignees?.map((assignee: any) => (
+                                                            <div key={assignee.id} className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white dark:border-slate-950 text-[10px] font-medium text-indigo-700" title={assignee.name}>
+                                                                {assignee.name.charAt(0)}
+                                                            </div>
+                                                        ))}
+                                                        {(!task.assignees || task.assignees.length === 0) && <span className="text-xs text-muted-foreground">-</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleStatusChange(task); }}
+                                                        className={`text-xs px-2 py-1 rounded-full font-medium border ${task.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400' :
+                                                                task.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
+                                                                    task.status === 'REVIEW' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400' :
+                                                                        'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                                                            }`}
+                                                    >
+                                                        {task.status === 'TODO' && 'À faire'}
+                                                        {task.status === 'IN_PROGRESS' && 'En cours'}
+                                                        {task.status === 'REVIEW' && 'En revue'}
+                                                        {task.status === 'COMPLETED' && 'Terminé'}
+                                                    </button>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleViewTask(task); }}>
+                                                        <List className="h-4 w-4" />
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {initialTasks.length === 0 && (
+                                            <tr>
+                                                <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                                                    Aucune tâche trouvée
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Mobile: Cards */}
+                    <div className="md:hidden space-y-3">
+                        {initialTasks.map(task => (
+                            <Card key={task.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleViewTask(task)}>
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium text-sm line-clamp-2">{task.title}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs text-muted-foreground truncate">{task.project?.name}</span>
+                                                {task.dueDate && (
+                                                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 shrink-0">
+                                                        <CalendarIcon className="h-3 w-3" />
+                                                        {new Date(task.dueDate).toLocaleDateString('fr-FR')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleStatusChange(task); }}
+                                                className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${task.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                        task.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                            task.status === 'REVIEW' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                                'bg-slate-50 text-slate-700 border-slate-200'
+                                                    }`}
+                                            >
+                                                {task.status === 'TODO' && 'À faire'}
+                                                {task.status === 'IN_PROGRESS' && 'En cours'}
+                                                {task.status === 'REVIEW' && 'En revue'}
+                                                {task.status === 'COMPLETED' && 'Terminé'}
+                                            </button>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleViewTask(task); }}>
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1 border-t border-muted/50">
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${task.priority >= 3 ? 'bg-red-100 text-red-700' :
+                                                task.priority === 2 ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                                            }`}>
+                                            {task.priority >= 3 ? 'Haute' : task.priority === 2 ? 'Moyenne' : 'Basse'}
+                                        </span>
+                                        <div className="flex -space-x-1.5">
+                                            {task.assignees?.map((assignee: any) => (
+                                                <div key={assignee.id} className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white text-[8px] font-medium text-indigo-700" title={assignee.name}>
+                                                    {assignee.name.charAt(0)}
                                                 </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(task); }}
-                                                    className={`text-xs px-2 py-1 rounded-full font-medium border ${task.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400' :
-                                                            task.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
-                                                                task.status === 'REVIEW' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400' :
-                                                                    'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
-                                                        }`}
-                                                >
-                                                    {task.status === 'TODO' && 'À faire'}
-                                                    {task.status === 'IN_PROGRESS' && 'En cours'}
-                                                    {task.status === 'REVIEW' && 'En revue'}
-                                                    {task.status === 'COMPLETED' && 'Terminé'}
-                                                </button>
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleViewTask(task); }}>
-                                                    <List className="h-4 w-4" />
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {initialTasks.length === 0 && (
-                                        <tr>
-                                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                Aucune tâche trouvée
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
+                                            ))}
+                                            {(!task.assignees || task.assignees.length === 0) && <span className="text-[10px] text-muted-foreground">Non assigné</span>}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                        {initialTasks.length === 0 && (
+                            <div className="text-center py-12 text-muted-foreground border rounded-xl bg-card">
+                                <p className="text-sm font-medium">Aucune tâche trouvée</p>
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
             {/* Calendar View */}
             {viewMode === 'calendar' && (
