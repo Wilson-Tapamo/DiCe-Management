@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, MoreVertical, Mail, Phone, Star, MapPin } from "lucide-react"
+import { Briefcase, MoreVertical, Mail, Phone, Star, MapPin, Crown } from "lucide-react"
 import { getInitials } from "@/lib/utils"
 import {
     DropdownMenu,
@@ -35,12 +35,22 @@ export function ConsultantCard({ consultant, onEdit, onView, onDelete }: Consult
     const projectCount = consultant._count?.consultingProjects || 0
     const taskCount = consultant._count?.assignedTasks || 0
 
+    const isCEO = consultant.email === "tg.sonffo@dice-management.com" || consultant.name?.includes("SONFFO")
+
     return (
-        <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => onView(consultant)}>
+        <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer relative" onClick={() => onView(consultant)}>
+            {isCEO && (
+                <div className="absolute -top-2 -right-2 z-10">
+                    <div className="bg-amber-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md">
+                        <Crown className="h-3 w-3" />
+                        Dirigeant
+                    </div>
+                </div>
+            )}
             <CardHeader className="pb-3 relative">
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                        <Avatar className="h-14 w-14 border-2 border-background shadow-sm">
+                        <Avatar className={`h-14 w-14 border-2 border-background shadow-sm ${isCEO ? 'ring-2 ring-amber-400' : ''}`}>
                             <AvatarImage src={consultant.avatar || undefined} />
                             <AvatarFallback>{getInitials(consultant.name)}</AvatarFallback>
                         </Avatar>
@@ -51,9 +61,17 @@ export function ConsultantCard({ consultant, onEdit, onView, onDelete }: Consult
                                     <Briefcase className="h-3 w-3" />
                                     {consultant.title || "Consultant"}
                                 </span>
-                                <Badge variant="outline" className={`w-fit text-[10px] py-0 px-2 border ${getLevelColor(consultant.level)}`}>
-                                    {consultant.level}
-                                </Badge>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <Badge variant="outline" className={`w-fit text-[10px] py-0 px-2 border ${getLevelColor(consultant.level)}`}>
+                                        {consultant.level}
+                                    </Badge>
+                                    {isCEO && (
+                                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px] py-0 px-2">
+                                            <Crown className="h-2.5 w-2.5 mr-0.5" />
+                                            Dirigeant
+                                        </Badge>
+                                    )}
+                                </div>
                             </CardDescription>
                         </div>
                     </div>

@@ -250,6 +250,20 @@ async function main() {
         },
     });
 
+    const thierry = await prisma.user.create({
+        data: {
+            email: "thierry@dice-management.com",
+            name: "Thierry",
+            password: testPassword,
+            role: "DIRECTOR",
+            title: "Directeur des Opérations",
+            description: "Directeur des opérations chez DiCe Management.",
+            phone: "+237 6 77 00 00 04",
+            level: "DIRECTOR",
+            skills: ["Gestion d'équipe", "Planification", "Coordination"],
+        },
+    });
+
     // Ajouter les nouveaux utilisateurs comme consultants sur les projets existants
     if (programmes) {
         await prisma.project.update({
@@ -287,6 +301,7 @@ async function main() {
     console.log("Login: herve@dice-management.com");
     console.log("Login: hope@dice-management.com");
     console.log("Login: tg.sonffo@dice-management.com");
+    console.log("Login: thierry@dice-management.com");
     console.log("Password for all: pasword123");
 }
 

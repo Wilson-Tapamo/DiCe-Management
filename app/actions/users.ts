@@ -16,20 +16,28 @@ export async function getConsultants(filters?: {
     const session = await auth()
     if (!session?.user || (session.user as any)?.role !== "DIRECTOR") return { success: false, error: "Non autorisé" }
 
-    const where: any = { role: "CONSULTANT" }
+    const where: any = {
+        role: { in: ["CONSULTANT", "DIRECTOR"] }
+    }
 
+    const searchConditions: any[] = []
     if (filters?.search) {
-        where.OR = [
-            { name: { contains: filters.search } },
-            { email: { contains: filters.search } },
-            // Note: Cannot easily search inside JSON columns with simple contains in all DBs, 
-            // but for now we focus on name/email/title
-            { title: { contains: filters.search } }
-        ]
+        const searchTerm = filters.search
+        searchConditions.push({
+            OR: [
+                { name: { contains: searchTerm } },
+                { email: { contains: searchTerm } },
+                { title: { contains: searchTerm } },
+            ]
+        })
     }
 
     if (filters?.level && filters.level !== "ALL") {
-        where.level = filters.level
+        searchConditions.push({ level: filters.level })
+    }
+
+    if (searchConditions.length > 0) {
+        where.AND = searchConditions
     }
 
     if (filters?.minSalary !== undefined || filters?.maxSalary !== undefined) {
