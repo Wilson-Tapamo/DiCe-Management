@@ -63,7 +63,9 @@ export async function getDirectorDashboardData() {
 
         // 3. Consultant Performance (Top 5 by completed tasks this month or overall)
         const consultants = await prisma.user.findMany({
-            where: { role: 'CONSULTANT' },
+            where: {
+                role: { in: ['CONSULTANT', 'DIRECTOR'] }
+            },
             select: {
                 id: true,
                 name: true,
