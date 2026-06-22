@@ -20,6 +20,9 @@ async function main() {
 
     const password = await bcrypt.hash("pasword123", 10);
 
+    // Mot de passe commun pour les tests
+    const testPassword = await bcrypt.hash("pasword123", 10);
+
     const wilson = await prisma.user.create({
         data: {
             email: "wilson.tapamo@dice-management.com",
@@ -204,9 +207,87 @@ async function main() {
         },
     });
 
+    // Création des comptes utilisateurs supplémentaires
+    const herve = await prisma.user.create({
+        data: {
+            email: "herve@dice-management.com",
+            name: "Herve",
+            password: testPassword,
+            role: "DIRECTOR",
+            title: "Consultant Principal",
+            description: "Consultant senior chez DiCe Management.",
+            phone: "+237 6 77 00 00 01",
+            level: "DIRECTOR",
+            skills: ["Gestion de projet", "Conseil", "Analyse financière"],
+        },
+    });
+
+    const hope = await prisma.user.create({
+        data: {
+            email: "hope@dice-management.com",
+            name: "Hope",
+            password: testPassword,
+            role: "DIRECTOR",
+            title: "Consultant Senior",
+            description: "Consultant senior spécialisé en accompagnement des programmes.",
+            phone: "+237 6 77 00 00 02",
+            level: "DIRECTOR",
+            skills: ["Accompagnement", "Formation", "Suivi de projet"],
+        },
+    });
+
+    const tgSonffo = await prisma.user.create({
+        data: {
+            email: "tg.sonffo@dice-management.com",
+            name: "T.G SONFFO",
+            password: testPassword,
+            role: "DIRECTOR",
+            title: "Directeur Général",
+            description: "Directeur général de DiCe Management.",
+            phone: "+237 6 77 00 00 03",
+            level: "DIRECTOR",
+            skills: ["Direction", "Stratégie", "Management", "Leadership"],
+        },
+    });
+
+    // Ajouter les nouveaux utilisateurs comme consultants sur les projets existants
+    if (programmes) {
+        await prisma.project.update({
+            where: { id: programmes.id },
+            data: {
+                consultants: {
+                    connect: [
+                        { id: herve.id },
+                        { id: hope.id },
+                        { id: tgSonffo.id },
+                    ],
+                },
+            },
+        });
+    }
+
+    if (conference) {
+        await prisma.project.update({
+            where: { id: conference.id },
+            data: {
+                consultants: {
+                    connect: [
+                        { id: herve.id },
+                        { id: hope.id },
+                        { id: tgSonffo.id },
+                    ],
+                },
+            },
+        });
+    }
+
     console.log("Seed complete.");
     console.log("Login: wilson.tapamo@dice-management.com");
     console.log("Password: pasword123");
+    console.log("Login: herve@dice-management.com");
+    console.log("Login: hope@dice-management.com");
+    console.log("Login: tg.sonffo@dice-management.com");
+    console.log("Password for all: pasword123");
 }
 
 main()
