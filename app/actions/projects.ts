@@ -193,7 +193,9 @@ export async function updateProjectStatus(id: string, status: "PENDING" | "IN_PR
 export async function getConsultants() {
     try {
         const consultants = await prisma.user.findMany({
-            where: { role: "CONSULTANT" },
+            where: {
+                role: { in: ["CONSULTANT", "DIRECTOR"] }
+            },
             select: { id: true, name: true, avatar: true }
         })
         return { success: true, data: consultants }
