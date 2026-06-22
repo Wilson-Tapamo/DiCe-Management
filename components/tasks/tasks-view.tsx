@@ -151,6 +151,7 @@ export function TasksView({ initialTasks, projects, consultants, currentUser }: 
                             </Select>
                         </div>
 
+                        {/* Desktop: view toggle buttons */}
                         <div className="hidden md:flex border rounded-md bg-muted/50 p-1">
                             <Button
                                 variant={viewMode === 'board' ? 'secondary' : 'ghost'}
@@ -181,6 +182,46 @@ export function TasksView({ initialTasks, projects, consultants, currentUser }: 
                                 size="sm"
                                 onClick={() => setViewMode('gantt')}
                                 title="Gantt"
+                            >
+                                <BarChart2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        {/* Mobile: view toggle buttons (always visible) */}
+                        <div className="flex md:hidden border rounded-md bg-muted/50 p-1">
+                            <Button
+                                variant={viewMode === 'board' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('board')}
+                                title="Kanban"
+                                className="h-8 w-8 p-0"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('list')}
+                                title="Liste"
+                                className="h-8 w-8 p-0"
+                            >
+                                <List className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('calendar')}
+                                title="Calendrier"
+                                className="h-8 w-8 p-0"
+                            >
+                                <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'gantt' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('gantt')}
+                                title="Gantt"
+                                className="h-8 w-8 p-0"
                             >
                                 <BarChart2 className="h-4 w-4" />
                             </Button>
