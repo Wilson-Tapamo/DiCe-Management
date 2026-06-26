@@ -83,6 +83,12 @@ const navItems: NavItem[] = [
         roles: ["DIRECTOR", "CONSULTANT"],
     },
     {
+        title: "Mon Profil",
+        href: "/profile",
+        icon: Settings,
+        roles: ["DIRECTOR", "CONSULTANT"],
+    },
+    {
         title: "Paramètres",
         href: "/settings",
         icon: Settings,

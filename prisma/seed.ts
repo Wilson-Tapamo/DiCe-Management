@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("Start seeding DiCe Management...");
 
+    // 1. Nettoyer toutes les données existantes
     await prisma.notification.deleteMany();
     await prisma.financeEntry.deleteMany();
     await prisma.taskHours.deleteMany();
@@ -18,22 +19,25 @@ async function main() {
     await prisma.project.deleteMany();
     await prisma.user.deleteMany();
 
-    const password = await bcrypt.hash("pasword123", 10);
+    const defaultPassword = await bcrypt.hash("pasword123", 10);
 
-    // Mot de passe commun pour les tests
-    const testPassword = await bcrypt.hash("pasword123", 10);
+    // ================================================================
+    // PERSONNEL CONSERVÉ
+    // ================================================================
 
+    // 1. Wilson Tapamo (conservé)
     const wilson = await prisma.user.create({
         data: {
             email: "wilson.tapamo@dice-management.com",
             name: "Wilson Tapamo",
-            password,
+            password: defaultPassword,
             role: "DIRECTOR",
             title: "Coordinateur des programmes",
             description:
                 "Responsable de la planification des formations, conferences et activites de Diamond Center.",
             phone: "+237 6 99 00 00 00",
             level: "DIRECTOR",
+            mustChangePassword: true,
             skills: [
                 "Gestion de programmes",
                 "Entrepreneuriat",
@@ -60,6 +64,161 @@ async function main() {
         },
     });
 
+    // 2. Dr T.G SONNFO (conservé, avec téléphone corrigé)
+    const drSonffo = await prisma.user.create({
+        data: {
+            email: "tg.sonffo@dice-management.com",
+            name: "Dr T.G SONNFO",
+            password: defaultPassword,
+            role: "DIRECTOR",
+            title: "Dirigeant Directeur",
+            description: "Dirigeant et directeur général de DiCe Management.",
+            phone: "+237 55268913",
+            level: "DIRECTOR",
+            mustChangePassword: true,
+            skills: ["Direction", "Stratégie", "Management", "Leadership", "Prise de décision"],
+            education: [
+                {
+                    degree: "Doctorat en Gestion",
+                    school: "Université de Yaoundé",
+                    year: "2015",
+                },
+            ],
+            experience: [
+                {
+                    title: "Dirigeant Directeur",
+                    company: "DiCe (Diamond Center) Management",
+                    duration: "10 ans",
+                    description: "Direction générale et pilotage stratégique de l'entreprise.",
+                },
+            ],
+        },
+    });
+
+    // ================================================================
+    // NOUVEAU PERSONNEL
+    // ================================================================
+
+    // 3. Serge BOUMSONG — Directeur Commercial, senior
+    const serge = await prisma.user.create({
+        data: {
+            email: "serge.boumsong@dice-management.com",
+            name: "Serge BOUMSONG",
+            password: defaultPassword,
+            role: "DIRECTOR",
+            title: "Directeur Commercial",
+            description: "Directeur commercial senior chargé du développement des ventes et du portefeuille clients.",
+            phone: "+237 6 94 27 66 59",
+            level: "SENIOR",
+            mustChangePassword: true,
+            skills: ["Gestion commerciale", "Négociation", "Développement client", "Stratégie commerciale", "Management d'équipe"],
+            education: [
+                {
+                    degree: "Master en Commerce International",
+                    school: "Université de Douala",
+                    year: "2012",
+                },
+            ],
+            experience: [
+                {
+                    title: "Directeur Commercial",
+                    company: "DiCe (Diamond Center) Management",
+                    duration: "3 ans",
+                    description: "Pilotage de la stratégie commerciale et développement du portefeuille clients.",
+                },
+            ],
+        },
+    });
+
+    // 4. Mannuella — Comptable junior
+    const mannuella = await prisma.user.create({
+        data: {
+            email: "mannuella@dice-management.com",
+            name: "Mannuella",
+            password: defaultPassword,
+            role: "CONSULTANT",
+            title: "Comptable Junior",
+            description: "Comptable junior en charge de la saisie comptable et du classement des documents.",
+            phone: "+237 691344506",
+            level: "JUNIOR",
+            mustChangePassword: true,
+            skills: ["Comptabilité générale", "Saisie comptable", "Classement", "Archivage", "Excel"],
+            education: [
+                {
+                    degree: "BTS Comptabilité et Gestion",
+                    school: "Institut de Formation de Douala",
+                    year: "2023",
+                },
+            ],
+        },
+    });
+
+    // 5. Hope — Coordinateur intermédiaire
+    const hope = await prisma.user.create({
+        data: {
+            email: "hope@dice-management.com",
+            name: "Hope",
+            password: defaultPassword,
+            role: "CONSULTANT",
+            title: "Coordinateur",
+            description: "Coordinateur intermédiaire chargé du suivi des programmes et de la coordination des équipes.",
+            phone: "+237 670208668",
+            level: "INTERMEDIATE",
+            mustChangePassword: true,
+            skills: ["Coordination", "Suivi de projet", "Organisation", "Communication"],
+            education: [
+                {
+                    degree: "Licence en Gestion de Projet",
+                    school: "Université de Douala",
+                    year: "2021",
+                },
+            ],
+            experience: [
+                {
+                    title: "Coordinateur",
+                    company: "DiCe (Diamond Center) Management",
+                    duration: "2 ans",
+                    description: "Coordination des activités et suivi des équipes projets.",
+                },
+            ],
+        },
+    });
+
+    // 6. Hervé — Community Manager principal senior
+    const herve = await prisma.user.create({
+        data: {
+            email: "herve@dice-management.com",
+            name: "Hervé",
+            password: defaultPassword,
+            role: "CONSULTANT",
+            title: "Community Manager Principal",
+            description: "Community manager principal senior en charge de la stratégie de communication et des réseaux sociaux.",
+            phone: "+237 90462829",
+            level: "SENIOR",
+            mustChangePassword: true,
+            skills: ["Community Management", "Stratégie digitale", "Création de contenu", "Réseaux sociaux", "Communication"],
+            education: [
+                {
+                    degree: "Master en Communication Digitale",
+                    school: "Université de Yaoundé",
+                    year: "2018",
+                },
+            ],
+            experience: [
+                {
+                    title: "Community Manager Principal",
+                    company: "DiCe (Diamond Center) Management",
+                    duration: "5 ans",
+                    description: "Gestion de la stratégie de communication digitale et animation des réseaux sociaux.",
+                },
+            ],
+        },
+    });
+
+    // ================================================================
+    // PROJETS
+    // ================================================================
+
     const programmes = await prisma.project.create({
         data: {
             name: "Programme Entrepreneuriat Jeunes Leaders",
@@ -78,7 +237,13 @@ async function main() {
             expertise: "Entrepreneuriat, motivation, vente",
             managerId: wilson.id,
             consultants: {
-                connect: [{ id: wilson.id }],
+                connect: [
+                    { id: wilson.id },
+                    { id: drSonffo.id },
+                    { id: serge.id },
+                    { id: hope.id },
+                    { id: herve.id },
+                ],
             },
         },
     });
@@ -101,7 +266,13 @@ async function main() {
             expertise: "Art oratoire, motivation, leadership",
             managerId: wilson.id,
             consultants: {
-                connect: [{ id: wilson.id }],
+                connect: [
+                    { id: wilson.id },
+                    { id: drSonffo.id },
+                    { id: serge.id },
+                    { id: hope.id },
+                    { id: herve.id },
+                ],
             },
         },
     });
@@ -207,101 +378,22 @@ async function main() {
         },
     });
 
-    // Création des comptes utilisateurs supplémentaires
-    const herve = await prisma.user.create({
-        data: {
-            email: "herve@dice-management.com",
-            name: "Herve",
-            password: testPassword,
-            role: "DIRECTOR",
-            title: "Consultant Principal",
-            description: "Consultant senior chez DiCe Management.",
-            phone: "+237 6 77 00 00 01",
-            level: "DIRECTOR",
-            skills: ["Gestion de projet", "Conseil", "Analyse financière"],
-        },
-    });
-
-    const hope = await prisma.user.create({
-        data: {
-            email: "hope@dice-management.com",
-            name: "Hope",
-            password: testPassword,
-            role: "DIRECTOR",
-            title: "Consultant Senior",
-            description: "Consultant senior spécialisé en accompagnement des programmes.",
-            phone: "+237 6 77 00 00 02",
-            level: "DIRECTOR",
-            skills: ["Accompagnement", "Formation", "Suivi de projet"],
-        },
-    });
-
-    const tgSonffo = await prisma.user.create({
-        data: {
-            email: "tg.sonffo@dice-management.com",
-            name: "T.G SONFFO",
-            password: testPassword,
-            role: "DIRECTOR",
-            title: "Directeur Général",
-            description: "Directeur général de DiCe Management.",
-            phone: "+237 6 77 00 00 03",
-            level: "DIRECTOR",
-            skills: ["Direction", "Stratégie", "Management", "Leadership"],
-        },
-    });
-
-    const thierry = await prisma.user.create({
-        data: {
-            email: "thierry@dice-management.com",
-            name: "Thierry",
-            password: testPassword,
-            role: "DIRECTOR",
-            title: "Directeur des Opérations",
-            description: "Directeur des opérations chez DiCe Management.",
-            phone: "+237 6 77 00 00 04",
-            level: "DIRECTOR",
-            skills: ["Gestion d'équipe", "Planification", "Coordination"],
-        },
-    });
-
-    // Ajouter les nouveaux utilisateurs comme consultants sur les projets existants
-    if (programmes) {
-        await prisma.project.update({
-            where: { id: programmes.id },
-            data: {
-                consultants: {
-                    connect: [
-                        { id: herve.id },
-                        { id: hope.id },
-                        { id: tgSonffo.id },
-                    ],
-                },
-            },
-        });
-    }
-
-    if (conference) {
-        await prisma.project.update({
-            where: { id: conference.id },
-            data: {
-                consultants: {
-                    connect: [
-                        { id: herve.id },
-                        { id: hope.id },
-                        { id: tgSonffo.id },
-                    ],
-                },
-            },
-        });
-    }
-
     console.log("Seed complete.");
-    console.log("Login: wilson.tapamo@dice-management.com");
-    console.log("Password: pasword123");
-    console.log("Login: herve@dice-management.com");
-    console.log("Login: hope@dice-management.com");
-    console.log("Login: tg.sonffo@dice-management.com");
-    console.log("Login: thierry@dice-management.com");
+    console.log("====================================");
+    console.log("Personnel créé avec succès :");
+    console.log("1. Wilson Tapamo - Coordinateur des programmes");
+    console.log("2. Dr T.G SONNFO - Dirigeant Directeur");
+    console.log("3. Serge BOUMSONG - Directeur Commercial (senior)");
+    console.log("4. Mannuella - Comptable Junior");
+    console.log("5. Hope - Coordinateur (intermédiaire)");
+    console.log("6. Hervé - Community Manager Principal (senior)");
+    console.log("====================================");
+    console.log("Email: wilson.tapamo@dice-management.com");
+    console.log("Email: tg.sonffo@dice-management.com");
+    console.log("Email: serge.boumsong@dice-management.com");
+    console.log("Email: mannuella@dice-management.com");
+    console.log("Email: hope@dice-management.com");
+    console.log("Email: herve@dice-management.com");
     console.log("Password for all: pasword123");
 }
 

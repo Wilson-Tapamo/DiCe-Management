@@ -96,6 +96,7 @@ model User {
   description   String?   @db.Text
   monthlySalary Decimal   @default(0) @db.Decimal(10, 2)
   level         ConsultantLevel @default(JUNIOR)
+  mustChangePassword Boolean @default(true)
   rating        Float     @default(0)
   skills        Json?     // Array of strings
   education     Json?     // Array of objects { degree, school, year }

@@ -59,6 +59,7 @@ export function Topbar({ user }: TopbarProps) {
         { title: "Personnel", href: "/consultants", icon: Users, roles: ["DIRECTOR"] },
         { title: "Rapports", href: "/reports", icon: FileBarChart, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Documents", href: "/documents", icon: FolderOpen, roles: ["DIRECTOR", "CONSULTANT"] },
+        { title: "Mon Profil", href: "/profile", icon: User, roles: ["DIRECTOR", "CONSULTANT"] },
         { title: "Paramètres", href: "/settings", icon: Settings, roles: ["DIRECTOR", "CONSULTANT"] },
     ];
 
@@ -168,13 +169,17 @@ export function Topbar({ user }: TopbarProps) {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
-                                <User className="mr-2 h-4 w-4" />
-                                Profile
+                            <DropdownMenuItem asChild>
+                                <Link href="/profile">
+                                    <User className="mr-2 h-4 w-4" />
+                                    Mon Profil
+                                </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                Settings
+                            <DropdownMenuItem asChild>
+                                <Link href="/settings">
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    Paramètres
+                                </Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
@@ -183,7 +188,7 @@ export function Topbar({ user }: TopbarProps) {
                             className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                         >
                             <LogOut className="mr-2 h-4 w-4" />
-                            Sign out
+                            Déconnexion
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

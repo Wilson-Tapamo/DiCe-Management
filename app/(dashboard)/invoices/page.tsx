@@ -24,7 +24,7 @@ export default function InvoicesPage() {
             id: "INV-001",
             client: "ABC Corporation",
             project: "Corporate Merger ABC",
-            amount: "â‚¬15,000.00",
+            amount: "€15,000.00",
             status: "Paid",
             dueDate: "Dec 15, 2024",
             issuedDate: "Nov 15, 2024",
@@ -33,7 +33,7 @@ export default function InvoicesPage() {
             id: "INV-002",
             client: "XYZ Holdings",
             project: "Due Diligence XYZ",
-            amount: "â‚¬8,500.00",
+            amount: "€8,500.00",
             status: "Sent",
             dueDate: "Dec 20, 2024",
             issuedDate: "Nov 20, 2024",
@@ -42,7 +42,7 @@ export default function InvoicesPage() {
             id: "INV-003",
             client: "GHI Partners",
             project: "Legal Audit GHI",
-            amount: "â‚¬12,000.00",
+            amount: "€12,000.00",
             status: "Draft",
             dueDate: "Dec 25, 2024",
             issuedDate: "Nov 25, 2024",
@@ -51,7 +51,7 @@ export default function InvoicesPage() {
             id: "INV-004",
             client: "DEF Industries",
             project: "Contract Review DEF",
-            amount: "â‚¬5,500.00",
+            amount: "€5,500.00",
             status: "Overdue",
             dueDate: "Nov 30, 2024",
             issuedDate: "Oct 30, 2024",
@@ -60,7 +60,7 @@ export default function InvoicesPage() {
             id: "INV-005",
             client: "MNO Financial",
             project: "Regulatory Compliance MNO",
-            amount: "â‚¬22,000.00",
+            amount: "€22,000.00",
             status: "Sent",
             dueDate: "Jan 05, 2025",
             issuedDate: "Dec 05, 2024",
@@ -83,10 +83,10 @@ export default function InvoicesPage() {
     };
 
     const summary = {
-        total: "â‚¬63,000.00",
-        paid: "â‚¬15,000.00",
-        pending: "â‚¬30,500.00",
-        overdue: "â‚¬5,500.00",
+        total: "€63,000.00",
+        paid: "€15,000.00",
+        pending: "€30,500.00",
+        overdue: "€5,500.00",
     };
 
     return (
