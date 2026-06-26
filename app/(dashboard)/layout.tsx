@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/db/prisma";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { MustChangePasswordCheck } from "@/components/profile/must-change-password-check";
 
 export default async function DashboardGroupLayout({
     children,
@@ -14,16 +14,6 @@ export default async function DashboardGroupLayout({
         redirect("/");
     }
 
-    // Check if user needs to change password (skip on profile page)
-    const user = session.user.id ? await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { mustChangePassword: true }
-    }) : null;
-
-    if (user?.mustChangePassword) {
-        redirect("/profile");
-    }
-
     return (
         <DashboardLayout
             user={{
@@ -33,6 +23,7 @@ export default async function DashboardGroupLayout({
                 role: (session?.user as any)?.role,
             }}
         >
+            <MustChangePasswordCheck userId={session.user.id!} />
             {children}
         </DashboardLayout>
     );
