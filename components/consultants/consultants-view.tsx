@@ -172,6 +172,11 @@ export function ConsultantsView({ consultants: initialConsultants }: Consultants
                 open={!!viewConsultant}
                 onOpenChange={(open) => !open && setViewConsultant(null)}
                 consultant={viewConsultant}
+                onEdit={(c) => {
+                    setViewConsultant(null);
+                    setEditConsultant(c);
+                    setIsFormOpen(true);
+                }}
             />
         </div>
     )

@@ -6,54 +6,71 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getInitials } from "@/lib/utils"
-import { Briefcase, Mail, Phone, MapPin, Calendar, Building, GraduationCap, CheckCircle2 } from "lucide-react"
+import { Briefcase, Mail, Phone, MapPin, Calendar, Building, GraduationCap, CheckCircle2, Edit } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface ConsultantDetailsModalProps {
     consultant: any
     open: boolean
     onOpenChange: (open: boolean) => void
+    onEdit?: (consultant: any) => void
 }
 
-export function ConsultantDetailsModal({ consultant, open, onOpenChange }: ConsultantDetailsModalProps) {
+export function ConsultantDetailsModal({ consultant, open, onOpenChange, onEdit }: ConsultantDetailsModalProps) {
     if (!consultant) return null
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="p-6 pb-2">
-                    <div className="flex items-start gap-4">
-                        <Avatar className="h-20 w-20 border-4 border-background shadow-md">
+                <DialogHeader className="p-4 sm:p-6 pb-2">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-background shadow-md shrink-0">
                             <AvatarImage src={consultant.avatar} />
-                            <AvatarFallback className="text-xl">{getInitials(consultant.name)}</AvatarFallback>
+                            <AvatarFallback className="text-lg sm:text-xl">{getInitials(consultant.name)}</AvatarFallback>
                         </Avatar>
-                        <div className="space-y-1">
-                            <DialogTitle className="text-2xl font-bold">{consultant.name}</DialogTitle>
+                        <div className="space-y-1 w-full sm:w-auto">
+                            <DialogTitle className="text-xl sm:text-2xl font-bold">{consultant.name}</DialogTitle>
                             <DialogDescription className="flex flex-col gap-1">
-                                <span className="flex items-center gap-1.5 text-foreground font-medium">
-                                    <Briefcase className="h-4 w-4" />
+                                <span className="flex items-center gap-1.5 text-foreground font-medium text-sm sm:text-base">
+                                    <Briefcase className="h-4 w-4 shrink-0" />
                                     {consultant.title || "Consultant"}
                                 </span>
-                                <span className="flex items-center gap-3 text-sm">
+                                <span className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 text-sm">
                                     <span className="flex items-center gap-1">
-                                        <Mail className="h-3.5 w-3.5" /> {consultant.email}
+                                        <Mail className="h-3.5 w-3.5 shrink-0" /> {consultant.email}
                                     </span>
                                     {consultant.phone && (
                                         <span className="flex items-center gap-1">
-                                            <Phone className="h-3.5 w-3.5" /> {consultant.phone}
+                                            <Phone className="h-3.5 w-3.5 shrink-0" /> {consultant.phone}
                                         </span>
                                     )}
                                 </span>
                             </DialogDescription>
                         </div>
-                        <div className="ml-auto flex flex-col items-end gap-2">
-                            <Badge variant="outline" className="text-sm px-3 py-1">
-                                {consultant.level}
-                            </Badge>
-                            {consultant.rating > 0 && (
-                                <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-                                    ★ {consultant.rating.toFixed(1)}
+                        <div className="flex sm:flex-col items-center sm:items-end gap-2 w-full sm:w-auto sm:ml-auto">
+                            <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                                <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
+                                    {consultant.level}
                                 </Badge>
-                            )}
+                                {consultant.rating > 0 && (
+                                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-xs sm:text-sm">
+                                        ★ {consultant.rating.toFixed(1)}
+                                    </Badge>
+                                )}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 whitespace-nowrap h-8 sm:h-9 px-2 sm:px-3"
+                                onClick={() => {
+                                    onOpenChange(false)
+                                    onEdit?.(consultant)
+                                }}
+                            >
+                                <Edit className="h-4 w-4 shrink-0" />
+                                <span className="sm:hidden"></span>
+                                Modifier
+                            </Button>
                         </div>
                     </div>
                 </DialogHeader>
