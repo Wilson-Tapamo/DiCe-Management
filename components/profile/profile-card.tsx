@@ -60,26 +60,36 @@ export function ProfileCard({ profile, onEdit, onChangePassword }: ProfileCardPr
                                 {getInitials(profile.name || "User")}
                             </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 pt-2 sm:pt-12">
+                        <div className="flex-1 pt-2 sm:pt-12 w-full">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                                         {profile.name}
                                     </h1>
                                     {profile.title && (
-                                        <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">
                                             {profile.title}
                                         </p>
                                     )}
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button onClick={onEdit} variant="outline" size="sm">
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Modifier
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <Button
+                                        onClick={onEdit}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-3"
+                                    >
+                                        <Edit className="h-4 w-4 shrink-0" />
+                                        <span>Modifier</span>
                                     </Button>
-                                    <Button onClick={onChangePassword} variant="outline" size="sm">
-                                        <Lock className="h-4 w-4 mr-2" />
-                                        Mot de passe
+                                    <Button
+                                        onClick={onChangePassword}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-3"
+                                    >
+                                        <Lock className="h-4 w-4 shrink-0" />
+                                        <span>Mot de passe</span>
                                     </Button>
                                 </div>
                             </div>
